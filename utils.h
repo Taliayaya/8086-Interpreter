@@ -1,6 +1,9 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <stdint.h>
+#include <stdio.h>
+
 #define _CHEAT_
 
 #ifdef _CHEAT_
@@ -48,6 +51,8 @@ struct	exec {			/* a.out header */
 
 char *get_reg(uint8_t reg, int w);
 char *get_r_m(uint8_t r_m);
+char *get_segreg(uint8_t seg);
+
 int get_mod(uint8_t **text_segment, uint8_t mod, uint8_t r_m, 
 	uint8_t w, char *ea);
 

@@ -18,6 +18,12 @@ char *get_r_m(uint8_t r_m)
 	return disp[r_m];
 }
 
+char *get_segreg(uint8_t seg)
+{
+	char *seg_reg[] = {"es", "cs", "ss", "ds"};
+	return seg_reg[seg];
+}
+
 int get_mod(uint8_t **text_segment, uint8_t mod, uint8_t r_m, uint8_t w,
 	char *ea)
 {

@@ -1,7 +1,12 @@
 #ifndef PRINTS_H
 #define PRINTS_H
 
+#include <stdint.h>
+#include <stdlib.h>
+#include <stdio.h>
+
 #include "utils.h"
+
 
 void print_mr(uint8_t **text_segment, char *op_name, uint8_t byte2, 
 	 uint8_t w);
