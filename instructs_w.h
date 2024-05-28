@@ -40,6 +40,12 @@ int op_not(uint8_t **text_segment, uint8_t op, uint8_t flag,
 int op_and_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w);
 
+int op_xchg_0(uint8_t **text_segment, uint8_t op, uint8_t flag,
+	uint8_t byte2, uint8_t w);
+
+
+int op_test_0(uint8_t **text_segment, uint8_t op, uint8_t flag,
+	uint8_t byte2, uint8_t w);
 int op_test_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w);
 
@@ -48,6 +54,10 @@ int op_or_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 
 int op_xor_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w);
+
+int op_cmp_2(uint8_t **text_segment, uint8_t op, uint8_t flag,
+	uint8_t byte2, uint8_t w);
+
 
 // FLAG ONLY (no w)
 

@@ -1,5 +1,8 @@
 #include "instructs_sw.h"
 
+#define DIGIT_FORMAT 1
+#define HEXA_FORMAT 0
+
 int op_sw(uint8_t **text_segment)
 {
 	SW_Instruction instructions[] = {
@@ -40,7 +43,7 @@ int op_add_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 {
 	if (op == OP_SW_ADD_1 && flag == OP_SW_ADD_1_FLAG)
 	{
-		print_mr_sw(text_segment, "	add", byte2, s, w);
+		print_mr_sw(text_segment, "	add", byte2, s, w, HEXA_FORMAT);
 		return 1;
 	}
 	else
@@ -52,7 +55,7 @@ int op_adc_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 {
 	if (op == OP_SW_ADC_1 && flag == OP_SW_ADC_1_FLAG)
 	{
-		print_mr_sw(text_segment, "	adc", byte2, s, w);
+		print_mr_sw(text_segment, "	adc", byte2, s, w, HEXA_FORMAT);
 		return 1;
 	}
 	else
@@ -64,7 +67,7 @@ int op_sub_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 {
 	if (op == OP_SW_SUB_1 && flag == OP_SW_SUB_1_FLAG)
 	{
-		print_mr_sw(text_segment, "	sub", byte2, s, w);
+		print_mr_sw(text_segment, "	sub", byte2, s, w, HEXA_FORMAT);
 		return 1;
 	}
 	else
@@ -76,7 +79,7 @@ int op_ssb_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 {
 	if (op == OP_SW_SSB_1 && flag == OP_SW_SSB_1_FLAG)
 	{
-		print_mr_sw(text_segment, "	ssb", byte2, s, w);
+		print_mr_sw(text_segment, "	sbb", byte2, s, w, HEXA_FORMAT);
 		return 1;
 	}
 	else
@@ -88,7 +91,7 @@ int op_cmp_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 {
 	if (op == OP_SW_CMP_1 && flag == OP_SW_CMP_1_FLAG)
 	{
-		print_mr_sw(text_segment, "	cmp", byte2, s, w);
+		print_mr_sw(text_segment, "	cmp", byte2, s, w, DIGIT_FORMAT);
 		return 1;
 	}
 	else

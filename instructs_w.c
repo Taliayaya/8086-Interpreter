@@ -14,9 +14,12 @@ int op_w(uint8_t **text_segment)
 		op_idiv,
 		op_not,
 		op_and_1,
+		op_xchg_0,
+		op_test_0,
 		op_test_1,
 		op_or_1,
-		op_xor_1
+		op_xor_1,
+		op_cmp_2
 	};
 	W_Instruction flags_instructions[] = {
 		op_push_0,
@@ -66,7 +69,7 @@ int op_mov_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 	if (op == OP_W_MOV_1 &&
 		flag == OP_W_MOV_1_FLAG)
 	{
-		print_mr(text_segment, "	mov", byte2, w);
+		print_mr_data(text_segment, "	mov", byte2, w);
 		return 1;
 	}
 	else
@@ -177,11 +180,37 @@ int op_and_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 {
 	if (op == OP_W_AND_1 && flag == OP_W_AND_1_FLAG)
 	{
-		print_mr(text_segment, "	and", byte2, w);
+		print_mr_data(text_segment, "	and", byte2, w);
 		return 1;
 	}
 	else
 		return 0;
+}
+
+int op_xchg_0(uint8_t **text_segment, uint8_t op, uint8_t flag,
+	uint8_t byte2, uint8_t w)
+{
+	if (op == OP_XCHG_0)
+	{
+		print_mrr(text_segment, "	xchg", byte2, 0, w);
+		return 1;
+	}
+	else
+		return 0;
+
+}
+
+int op_test_0(uint8_t **text_segment, uint8_t op, uint8_t flag,
+	uint8_t byte2, uint8_t w)
+{
+	if (op == OP_W_TEST_0)
+	{
+		print_mrr(text_segment, "	test", byte2, 0, w);
+		return 1;
+	}
+	else
+		return 0;
+
 }
 
 int op_test_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
@@ -189,7 +218,7 @@ int op_test_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 {
 	if (op == OP_W_TEST_1 && flag == OP_W_TEST_1_FLAG)
 	{
-		print_mr(text_segment, "	test", byte2, w);
+		print_mr_data(text_segment, "	test", byte2, w);
 		return 1;
 	}
 	else
@@ -201,7 +230,7 @@ int op_or_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 {
 	if (op == OP_W_OR_1 && flag == OP_W_OR_1_FLAG)
 	{
-		print_mr(text_segment, "	or", byte2, w);
+		print_mr_data(text_segment, "	or", byte2, w);
 		return 1;
 	}
 	else
@@ -213,12 +242,38 @@ int op_xor_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 {
 	if (op == OP_W_XOR_1 && flag == OP_W_XOR_1_FLAG)
 	{
-		print_mr(text_segment, "	xor", byte2, w);
+		print_mr_data(text_segment, "	xor", byte2, w);
 		return 1;
 	}
 	else
 		return 0;
 }
+
+int op_cmp_2(uint8_t **text_segment, uint8_t op, uint8_t flag,
+	uint8_t byte2, uint8_t w)
+{
+	if (op == OP_W_CMP_2)
+	{
+		uint16_t data;
+		printf("%02hhx", byte2);
+		if (w == 1)
+		{
+			printf("%02hhx", **text_segment);
+			data = byte2 | (**text_segment << 8);
+			printf("		cmp ax, %04hx\n", data);
+			(*text_segment) += 1;
+		}
+		else
+		{
+			printf("		cmp al, %02hhx\n", byte2);
+		}
+		return 1;
+	}
+	else
+		return 0;
+}
+
+
 
 // FLAG ONLY (no w)
 
@@ -251,7 +306,7 @@ int op_call_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 {
 	if (op == OP_W_CALL_1 && flag == OP_W_CALL_1_FLAG)
 	{
-		print_mr(text_segment, "	call", byte2, w);
+		print_mr(text_segment, "	call", byte2, 1);
 		return 1;
 	}
 	else
@@ -263,7 +318,7 @@ int op_jmp_2(uint8_t **text_segment, uint8_t op, uint8_t flag,
 {
 	if (op == OP_JMP_2 && flag == OP_JMP_2_FLAG)
 	{
-		print_mr(text_segment, "	jmp", byte2, w);
+		print_mr(text_segment, "	jmp", byte2, 1);
 		return 1;
 	}
 	else
@@ -275,10 +330,11 @@ int op_jmp_4(uint8_t **text_segment, uint8_t op, uint8_t flag,
 {
 	if (op == OP_JMP_4 && flag == OP_JMP_4_FLAG)
 	{
-		print_mr(text_segment, "	jmp", byte2, w);
+		print_mr(text_segment, "	jmp", byte2, 1);
 		return 1;
 	}
 	else
 		return 0;
 }
+
 

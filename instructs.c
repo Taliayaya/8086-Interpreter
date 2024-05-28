@@ -21,7 +21,24 @@ int op_others(uint8_t **text_segment, uint16_t pc)
 		op_popf,
 		op_mov_2,
 		op_int,
-		op_ret
+		op_ret,
+		op_cbw,
+		op_cwd,
+		op_ssb_2,
+		op_sub_2,
+		op_logic,
+		op_clc,
+		op_cmc,
+		op_stc,
+		op_cld,
+		op_std,
+		op_cli,
+		op_sti,
+		op_hlt,
+		op_wait,
+		op_test_2,
+		op_rep
+
 	};
 	size_t length = sizeof(instructions) / sizeof(Instruction);
 
@@ -312,12 +329,64 @@ int op_cond_jmp(uint8_t **text_segment, uint8_t op, uint16_t pc)
 		case OP_JE:
 			op_name = "je";
 			break;
+		case OP_JL:
+			op_name = "jl";
+			break;
+		case OP_JLE:
+			op_name = "jle";
+			break;
+		case OP_JB:
+			op_name = "jb";
+			break;
+		case OP_JBE:
+			op_name = "jbe";
+			break;
+		case OP_JP:
+			op_name = "jl";
+			break;
+		case OP_JO:
+			op_name = "jo";
+			break;
+		case OP_JS:
+			op_name = "js";
+			break;
 		case OP_JNE:
 			op_name = "jne";
 			break;
 		case OP_JNL:
 			op_name = "jnl";
 			break;
+		case OP_JNLE:
+			op_name = "jnle";
+			break;
+		case OP_JNB:
+			op_name = "jnb";
+			break;
+		case OP_JNBE:
+			op_name = "jnbe";
+			break;
+		case OP_JNP:
+			op_name = "jnp";
+			break;
+		case OP_JNO:
+			op_name = "jno";
+			break;
+		case OP_JNS:
+			op_name = "jns";
+			break;
+		case OP_LOOP:
+			op_name = "loop";
+			break;
+		case OP_LOOPZ:
+			op_name = "loopz";
+			break;
+		case OP_LOOPNZ:
+			op_name = "loopnz";
+			break;
+		case OP_JCXZ:
+			op_name = "jcxz";
+			break;
+
 		default:
 			return 0;
 	}
@@ -352,8 +421,292 @@ int op_ret(uint8_t **text_segment, uint8_t op)
 	{
 		printf("		ret\n");
 	}
+	else if (op == OP_RET_1)
+	{
+		uint16_t data = **text_segment + (text_segment[0][1] << 8);
+		printf("%02hhx%02hhx", **text_segment, text_segment[0][1]);
+		printf("		ret %04hx\n", data);
+		(*text_segment) += 2;
+	}
 	else
 		return 0;
 	return 1;
 }
 
+int op_cbw(uint8_t **text_segment, uint8_t op)
+{
+	if (op == OP_CBW)
+	{
+		printf("		cbw\n");
+	}
+	else
+		return 0;
+	return 1;
+}
+
+int op_cwd(uint8_t **text_segment, uint8_t op)
+{
+	if (op == OP_CWD)
+	{
+		printf("		cwd\n");
+	}
+	else
+		return 0;
+	return 1;
+}
+
+int op_sub_2(uint8_t **text_segment, uint8_t byte1)
+{
+	if (IS_OP(byte1, W_MASK, OP_W_SUB_2))
+	{
+		uint8_t w;
+		uint16_t data;
+		w = W(byte1);
+		printf("%02hhx", **text_segment);
+		data = **text_segment;
+		if (w == 1)
+		{
+			printf("%02hhx", text_segment[0][1]);
+			data |= text_segment[0][1] << 8;
+			(*text_segment) += 2;
+		}
+		else
+			*text_segment += 1;
+		printf("		sub %s, %04hx\n", w ? "ax" : "al", data);
+	}
+	else
+		return 0;
+	return 1;
+}
+
+int op_ssb_2(uint8_t **text_segment, uint8_t byte1)
+{
+	if (IS_OP(byte1, OP_SSB_2_MASK, OP_SSB_2))
+	{
+		uint8_t w;
+		uint16_t data;
+		w = W(byte1);
+		printf("%02hhx", **text_segment);
+		data = **text_segment;
+		if (w == 1)
+		{
+			printf("%02hhx", text_segment[0][1]);
+			data |= text_segment[0][1] << 8;
+			(*text_segment) += 2;
+		}
+		else
+			*text_segment += 1;
+		printf("		sbb %s, %04hx\n", w ? "ax" : "al", data);
+	}
+	else
+		return 0;
+	return 1;
+}
+
+int op_logic(uint8_t **text_segment, uint8_t byte1)
+{
+	if (IS_OP(byte1, VW_MASK, OP_VW_LOGIC))
+	{
+		uint8_t v, w, byte2;
+		byte2 = **text_segment;
+		v = D(byte1);
+		w = W(byte1);
+		(*text_segment)++;
+
+		switch (FLAG(byte2))
+		{
+			case OP_SHL_FLAG:
+				print_mr_vw(text_segment, "	shl", byte2, v, w);
+				break;
+			case OP_SHR_FLAG:
+				print_mr_vw(text_segment, "	shr", byte2, v, w);
+				break;
+			case OP_SAR_FLAG:
+				print_mr_vw(text_segment, "	sar", byte2, v, w);
+				break;
+			case OP_ROL_FLAG:
+				print_mr_vw(text_segment, "	rol", byte2, v, w);
+				break;
+			case OP_ROR_FLAG:
+				print_mr_vw(text_segment, "	ror", byte2, v, w);
+				break;
+			case OP_RCL_FLAG:
+				print_mr_vw(text_segment, "	rcl", byte2, v, w);
+				break;
+			case OP_RCR_FLAG:
+				print_mr_vw(text_segment, "	rcr", byte2, v, w);
+				break;
+			default:
+				return 0;
+		}
+	}
+	else
+		return 0;
+	return 1;
+}
+
+int op_clc(uint8_t **text_segment, uint8_t op)
+{
+	if (op == OP_CLC)
+	{
+		printf("		clc\n");
+	}
+	else
+		return 0;
+	return 1;
+}
+
+int op_cmc(uint8_t **text_segment, uint8_t op)
+{
+	if (op == OP_CMC)
+	{
+		printf("		cmc\n");
+	}
+	else
+		return 0;
+	return 1;
+}
+
+int op_stc(uint8_t **text_segment, uint8_t op)
+{
+	if (op == OP_STC)
+	{
+		printf("		stc\n");
+	}
+	else
+		return 0;
+	return 1;
+}
+
+int op_cld(uint8_t **text_segment, uint8_t op)
+{
+	if (op == OP_CLD)
+	{
+		printf("		cld\n");
+	}
+	else
+		return 0;
+	return 1;
+}
+
+int op_std(uint8_t **text_segment, uint8_t op)
+{
+	if (op == OP_STD)
+	{
+		printf("		std\n");
+	}
+	else
+		return 0;
+	return 1;
+}
+
+int op_cli(uint8_t **text_segment, uint8_t op)
+{
+	if (op == OP_CLI)
+	{
+		printf("		cli\n");
+	}
+	else
+		return 0;
+	return 1;
+}
+
+int op_sti(uint8_t **text_segment, uint8_t op)
+{
+	if (op == OP_STI)
+	{
+		printf("		sti\n");
+	}
+	else
+		return 0;
+	return 1;
+}
+
+int op_hlt(uint8_t **text_segment, uint8_t op)
+{
+	if (op == OP_HLT)
+	{
+		printf("		hlt\n");
+	}
+	else
+		return 0;
+	return 1;
+}
+
+int op_wait(uint8_t **text_segment, uint8_t op)
+{
+	if (op == OP_WAIT)
+	{
+		printf("		wait\n");
+	}
+	else
+		return 0;
+	return 1;
+}
+
+int op_test_2(uint8_t **text_segment, uint8_t byte1)
+{
+	if (IS_OP(byte1, W_MASK, OP_W_TEST_2))
+	{
+		uint8_t w = W(byte1);
+		uint16_t data;
+		if (w == 1)
+		{
+			data = **text_segment | (text_segment[0][1] << 8);
+			printf("%02hhx%02hhx", **text_segment, text_segment[0][1]);
+			(*text_segment) += 2;
+			printf("		test ax, %04hx\n", data);
+		}
+		else
+		{
+			data = **text_segment;
+			printf("%02hhx", **text_segment);
+			(*text_segment) += 1;
+			printf("		test al, %i\n", (int8_t)data);
+		}
+		
+	}
+	else
+		return 0;
+	return 1;
+}
+
+int op_rep(uint8_t **text_segment, uint8_t byte1)
+{
+	if (IS_OP(byte1, W_MASK, OP_Z_REP))
+	{
+		uint8_t z, byte2, w;
+		z = W(byte1);
+		byte2 = **text_segment;
+		w = W(byte2);
+		(*text_segment) += 1;
+
+		char *sub_inst;
+		switch (byte2 & W_MASK)
+		{
+			case OP_W_MOVS:
+				sub_inst = "movs";
+				break;
+			case OP_W_CMPS:
+				sub_inst = "cmps";
+				break;
+			case OP_W_SCAS:
+				sub_inst = "scas";
+				break;
+			case OP_W_LODS:
+				sub_inst = "lods";
+				break;
+			case OP_W_STOS:
+				sub_inst = "stos";
+				break;
+			default:
+				sub_inst = "(undefined)";
+				break;
+		}
+		printf("%02hhx		rep %s%c\n", byte2, sub_inst,
+			w ? 'w' : 'b');
+	}
+	else
+		return 0;
+	return 1;
+}

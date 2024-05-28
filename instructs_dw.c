@@ -12,7 +12,7 @@ int op_dw(uint8_t **text_segment)
 		op_cmp_0,
 		op_and_0,
 		op_or_0,
-		op_xor_0
+		op_xor_0,
 	};
 	size_t length = sizeof(instructions) / sizeof(DW_Instruction);
 
@@ -146,6 +146,9 @@ int op_xor_0(uint8_t **text_segment, uint8_t op,
 	else
 		return 0;
 }
+
+
+
 
 //int main()
 //{

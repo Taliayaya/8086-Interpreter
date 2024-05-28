@@ -37,7 +37,7 @@ int get_mod(uint8_t **text_segment, uint8_t mod, uint8_t r_m, uint8_t w,
 	switch (mod)
 	{
 		case 0b00:
-			sprintf(ea, "[%s]", get_r_m(r_m));
+			sprintf(ea, "[%s]",  get_r_m(r_m));
 			return 0;
 		case 0b01:
 			disp = text_segment[0][0];
