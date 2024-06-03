@@ -40,6 +40,8 @@
 #define OP_W_MOV_1_FLAG	0b000
 #define OP_MOV_2		0b10110000
 #define OP_MOV_2_MASK	0b11110000
+#define OP_W_MOV_3		0b10100000
+#define OP_W_MOV_4		0b10100010
 
 
 // PUSH OPERATIONS
@@ -325,6 +327,7 @@ int op_cwd(uint8_t **text_segment, uint8_t op);
 
 int op_test_2(uint8_t **text_segment, uint8_t byte1);
 int op_rep(uint8_t **text_segment, uint8_t byte1);
+int op_string(uint8_t **text_segment, uint8_t byte1);
 
 
 

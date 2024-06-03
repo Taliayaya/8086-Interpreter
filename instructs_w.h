@@ -11,6 +11,15 @@ int op_w(uint8_t **text_segment);
 
 int op_mov_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w);
+int op_mov_3(uint8_t **text_segment, uint8_t op, uint8_t flag,
+	uint8_t byte2, uint8_t w);
+int op_mov_4(uint8_t **text_segment, uint8_t op, uint8_t flag,
+	uint8_t byte2, uint8_t w);
+
+int op_add_2(uint8_t **text_segment, uint8_t op, uint8_t flag,
+	uint8_t byte2, uint8_t w);
+int op_adc_2(uint8_t **text_segment, uint8_t op, uint8_t flag,
+	uint8_t byte2, uint8_t w);
 
 int op_inc_0(uint8_t **text_segment, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w);

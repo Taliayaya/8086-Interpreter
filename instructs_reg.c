@@ -70,7 +70,7 @@ int op_xchg_1(uint8_t op, uint8_t reg)
 {
 	if (op == OP_XCHG_1)
 	{
-		printf("	xchg %s, ax\n", get_reg(reg, DEFAULT_W));
+		printf("		xchg %s, ax\n", get_reg(reg, DEFAULT_W));
 		return 1;
 	}
 	else

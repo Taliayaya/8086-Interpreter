@@ -5,6 +5,10 @@ int op_w(uint8_t **text_segment)
 {
 	W_Instruction instructions[] = {
 		op_mov_1,
+		op_mov_3,
+		op_mov_4,
+		op_add_2,
+		op_adc_2,
 		op_inc_0,
 		op_dec_0,
 		op_neg,
@@ -76,6 +80,79 @@ int op_mov_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 		return 0;
 }
 
+int op_mov_3(uint8_t **text_segment, uint8_t op, uint8_t flag,
+	uint8_t byte2, uint8_t w)
+{
+	if (op == OP_W_MOV_3)
+	{
+		uint16_t addr = byte2 | (**text_segment << 8);
+		printf("%02hhx%02hhx", byte2, **text_segment);
+		(*text_segment) += 1;
+		printf("		mov %s, [%04hx]\n", w ? "ax" : "al", addr);
+		return 1;
+	}
+	else
+		return 0;
+}
+
+int op_mov_4(uint8_t **text_segment, uint8_t op, uint8_t flag,
+	uint8_t byte2, uint8_t w)
+{
+	if (op == OP_W_MOV_4)
+	{
+		uint16_t addr = byte2 | (**text_segment << 8);
+		printf("%02hhx%02hhx", byte2, **text_segment);
+		(*text_segment) += 1;
+		printf("		mov [%04hx], %s\n", addr, w ? "ax" : "al");
+		return 1;
+	}
+	else
+		return 0;
+}
+
+int op_add_2(uint8_t **text_segment, uint8_t op, uint8_t flag,
+	uint8_t byte2, uint8_t w)
+{
+	if (op == OP_ADD_2)
+	{
+		if (w == 0)
+		{
+			printf("%02hhx		add al, %hhx\n", byte2);
+		}
+		else
+		{
+			uint16_t data = byte2 | (**text_segment << 8);
+			printf("%02hhx%02hhx", byte2, **text_segment);
+			printf("		add ax, %04hx\n", data);
+			(*text_segment) += 1;
+		}
+		return 1;
+	}
+	else
+		return 0;
+}
+
+int op_adc_2(uint8_t **text_segment, uint8_t op, uint8_t flag,
+	uint8_t byte2, uint8_t w)
+{
+	if (op == OP_W_ADC_2)
+	{
+		if (w == 0)
+		{
+			printf("%02hhx		adc al, %hhx", byte2);
+		}
+		else
+		{
+			uint16_t data = byte2 | (**text_segment << 8);
+			printf("%02hhx", **text_segment);
+			printf("		adc ax, %04hx", data);
+			(*text_segment) += 1;
+		}
+		return 1;
+	}
+	else
+		return 0;
+}
 
 
 int op_inc_0(uint8_t **text_segment, uint8_t op, uint8_t flag,

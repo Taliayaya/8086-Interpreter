@@ -37,7 +37,8 @@ int op_others(uint8_t **text_segment, uint16_t pc)
 		op_hlt,
 		op_wait,
 		op_test_2,
-		op_rep
+		op_rep,
+		op_string
 
 	};
 	size_t length = sizeof(instructions) / sizeof(Instruction);
@@ -671,6 +672,46 @@ int op_test_2(uint8_t **text_segment, uint8_t byte1)
 	return 1;
 }
 
+char *to_op_string(uint8_t byte)
+{
+	char *sub_inst;
+	switch (byte & W_MASK)
+	{
+		case OP_W_MOVS:
+			sub_inst = "movs";
+			break;
+		case OP_W_CMPS:
+			sub_inst = "cmps";
+			break;
+		case OP_W_SCAS:
+			sub_inst = "scas";
+			break;
+		case OP_W_LODS:
+			sub_inst = "lods";
+			break;
+		case OP_W_STOS:
+			sub_inst = "stos";
+			break;
+		default:
+			sub_inst = 0;
+			break;
+	}
+	return sub_inst;
+}
+
+int op_string(uint8_t **text_segment, uint8_t byte1)
+{
+	char *action = to_op_string(byte1);
+	if (action)
+	{
+		char type = W(byte1) ? 'w' : 'b';
+		printf("	%s%c\n", action, type);
+		return 1;
+	}
+	else
+		return 0;
+}
+
 int op_rep(uint8_t **text_segment, uint8_t byte1)
 {
 	if (IS_OP(byte1, W_MASK, OP_Z_REP))
@@ -681,28 +722,7 @@ int op_rep(uint8_t **text_segment, uint8_t byte1)
 		w = W(byte2);
 		(*text_segment) += 1;
 
-		char *sub_inst;
-		switch (byte2 & W_MASK)
-		{
-			case OP_W_MOVS:
-				sub_inst = "movs";
-				break;
-			case OP_W_CMPS:
-				sub_inst = "cmps";
-				break;
-			case OP_W_SCAS:
-				sub_inst = "scas";
-				break;
-			case OP_W_LODS:
-				sub_inst = "lods";
-				break;
-			case OP_W_STOS:
-				sub_inst = "stos";
-				break;
-			default:
-				sub_inst = "(undefined)";
-				break;
-		}
+		char *sub_inst = to_op_string(byte2);
 		printf("%02hhx		rep %s%c\n", byte2, sub_inst,
 			w ? 'w' : 'b');
 	}
