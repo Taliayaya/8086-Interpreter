@@ -48,6 +48,7 @@ int op_push_1(uint8_t op, uint8_t reg)
 	if (op == OP_PUSH_1)
 	{
 		print_reg("	push", reg, DEFAULT_W);
+		push_reg_stack(reg, BIT_16);
 		return 1;
 	}
 	else
@@ -59,6 +60,7 @@ int op_pop_1(uint8_t op, uint8_t reg)
 	if (op == OP_POP_1)
 	{
 		print_reg("	pop", reg, DEFAULT_W);
+		pop_reg_stack(reg, BIT_16);
 		return 1;
 	}
 	else

@@ -67,7 +67,26 @@ int op_sub_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 {
 	if (op == OP_SW_SUB_1 && flag == OP_SW_SUB_1_FLAG)
 	{
-		print_mr_sw(text_segment, "	sub", byte2, s, w, HEXA_FORMAT);
+		struct print_data rdata;
+		rdata = print_mr_sw(text_segment, "	sub", byte2, s, w, HEXA_FORMAT);
+		if (rdata.mdata.type == MOD_REG);
+		else
+		{
+			int16_t result = rdata.mem_data - rdata.data;
+			if (w)
+				*(int16_t *)(g_memory + rdata.mdata.ea) = result;
+			else
+				g_memory[rdata.mdata.ea] -= rdata.data;
+
+			g_flags.OF = (rdata.mem_data > rdata.data && result < 0) || (rdata.mem_data < rdata.data && result > 0); // signed carry
+			g_flags.SF = result < 0; // negative
+			g_flags.ZF = result == 0; // zero
+			g_flags.AF = ((rdata.mem_data & 0x0F) < (rdata.data & 0x0F)); // nibble overflow
+			//g_flags.PF // TODO
+			g_flags.CF = rdata.mem_data < rdata.data;
+
+		}
+
 		return 1;
 	}
 	else

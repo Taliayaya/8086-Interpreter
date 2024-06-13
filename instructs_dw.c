@@ -1,4 +1,5 @@
 #include "instructs_dw.h"
+#include "utils.h"
 
 int op_dw(uint8_t **text_segment)
 {
@@ -44,7 +45,26 @@ int op_mov_0(uint8_t **text_segment, uint8_t op,
 {
 	if (op == OP_DW_MOV_0)
 	{
-		print_mrr(text_segment, "	mov", byte2, d, w);
+		struct mrr_data rdata;
+		rdata = print_mrr(text_segment, "	mov", byte2, d, w);
+		if (rdata.mdata.type == MOD_REG)
+		{
+			int16_t data = get_registers(g_registers, rdata.reg_from, w);
+			set_registers(g_registers, rdata.reg_to, w, data);
+		}
+		else // EA
+		{
+			if (d)
+			{
+				int16_t data = get_registers(g_registers, rdata.reg_from, w);
+				set_memory(g_memory, rdata.mdata.ea, data, w);
+			}
+			else
+			{
+				int16_t data = get_memory(g_memory, rdata.mdata.ea, w);
+				set_registers(g_registers, rdata.reg_to, data, w);
+			}
+		}
 		return 1;
 	}
 	else

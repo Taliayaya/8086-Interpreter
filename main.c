@@ -19,12 +19,13 @@ void instruct(uint8_t **text_segment, long index)
 {
 	uint8_t op = text_segment[0][0];
 
-	printf("%04lx: %02hhx", index, op);
+	print_registers_state();
+	printf("%04lx:%02hhx", index, op);
 	if (op_dw(text_segment))
 		return;
 	else if (op_sw(text_segment))
 		return;
-	else if (op_w(text_segment))
+	else if (op_w(*text_segment, &index))
 		return;
 	else if (instructs_reg_only(text_segment))
 		return;
@@ -51,6 +52,11 @@ int main(int argc, char **argv)
 
 	uint8_t *text_area = content + header->a_hdrlen;
 	uint8_t *current_text = text_area;
+	g_memory = text_area + header->a_text;
+
+	printf("sizeof %zu\n", sizeof(struct flags));
+
+	print_registers_header();
 	while (current_text < text_area + header->a_text - 1)
 	{
 		//printf("%02hhX ", text_area[i]);

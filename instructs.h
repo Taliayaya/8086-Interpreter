@@ -7,8 +7,7 @@
 
 #include "utils.h"
 #include "prints.h"
-
-// TODO for some, data is not printed nor taken into account
+#include "syscalls.h"
 
 // INSTRUCTIONS
 #define MOV1 0b100010 
@@ -265,10 +264,6 @@
 #define OP_ESC_MSK		0b11111000
 #define OP_LOCK			0b11110000
 
-// TODO:
-// Regroup SW together, W togethers, DW togethers, etc.
-// and done!
-// whats currently done is too overwhelming...
 int op_others(uint8_t **text_segment, uint16_t pc);
 int op_pc(uint8_t **text_segment, uint16_t pc);
 // MOV

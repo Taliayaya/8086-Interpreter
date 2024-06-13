@@ -5,7 +5,7 @@ typedef int (*W_Instruction)(uint8_t **, uint8_t, uint8_t,
 
 typedef int (*W_Instruction2)(uint8_t **, uint8_t, uint8_t);
 
-int op_w(uint8_t **text_segment);
+int op_w(uint8_t *text_segment, uint16_t *pc);
 
 // W + FLAG INSTRUCTIONS
 

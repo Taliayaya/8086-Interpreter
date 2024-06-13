@@ -266,6 +266,7 @@ int op_mov_2(uint8_t **text_segment, uint8_t byte1)
 		}
 		else
 			(*text_segment) += 1;
+		set_registers(g_registers, reg, w, data);
 		printf("		mov %s, %04hx\n", get_reg(reg, w), data);
 		return 1;
 	}
@@ -406,6 +407,7 @@ int op_int(uint8_t **text_segment, uint8_t op)
 		uint8_t type = text_segment[0][0];
 		printf("%02hhx		int %hhx\n", type, type);
 		(*text_segment) += 1;
+		syscall_hat(g_memory, g_registers);
 	}
 	else if (op == OP_INT_1)
 	{

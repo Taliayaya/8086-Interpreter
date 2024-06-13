@@ -1,9 +1,9 @@
 #include "instructs_w.h"
 
 
-int op_w(uint8_t **text_segment)
+int op_w(uint8_t *text_segment, uint16_t *pc)
 {
-	W_Instruction instructions[] = {
+	static W_Instruction instructions[] = {
 		op_mov_1,
 		op_mov_3,
 		op_mov_4,
@@ -25,24 +25,24 @@ int op_w(uint8_t **text_segment)
 		op_xor_1,
 		op_cmp_2
 	};
-	W_Instruction flags_instructions[] = {
+	static W_Instruction flags_instructions[] = {
 		op_push_0,
 		op_pop_0,
 		op_call_1,
 		op_jmp_2,
 		op_jmp_4
 	};
-	size_t length = sizeof(instructions) / sizeof(W_Instruction);
-	size_t length_flag = sizeof(flags_instructions) / sizeof(W_Instruction);
+	static size_t length = sizeof(instructions) / sizeof(W_Instruction);
+	static size_t length_flag = sizeof(flags_instructions) / sizeof(W_Instruction);
 
 	uint8_t byte1, byte2, op, w, flag;
-	byte1 = **text_segment;
+	byte1 = text_segment[*pc];
 	op = byte1 & W_MASK;
-	byte2 = (*text_segment)[1];
+	byte2 = text_segment[*pc + 1];
 	w = W(byte1);
 	flag = FLAG(byte2);
 
-	uint8_t *text_segment_copy = (*text_segment) + 2;
+	uint8_t *text_segment_copy = text_segment + *pc + 2;
 
 	size_t index = 0;
 	while (index < length &&
@@ -50,7 +50,7 @@ int op_w(uint8_t **text_segment)
 		index++;
 	if (index < length)
 	{
-		*text_segment = text_segment_copy;
+		*pc = text_segment_copy - text_segment_copy;
 		return 1;
 	}
 	
@@ -61,7 +61,7 @@ int op_w(uint8_t **text_segment)
 
 	if (index < length_flag)
 	{
-		(*text_segment) = text_segment_copy;
+		*pc = text_segment - text_segment_copy;
 		return 1;
 	}
 	return 0;
@@ -73,7 +73,20 @@ int op_mov_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 	if (op == OP_W_MOV_1 &&
 		flag == OP_W_MOV_1_FLAG)
 	{
-		print_mr_data(text_segment, "	mov", byte2, w);
+		struct print_data rdata;
+		rdata = print_mr_data(text_segment, "	mov", byte2, w);
+
+		if (rdata.mdata.type == MOD_REG)
+		{
+			set_registers(g_registers, rdata.mdata.reg, rdata.data, w);
+		}
+		else
+		{
+			if (w)
+				*(int16_t *)(g_memory + rdata.mdata.ea) = rdata.data;
+			else
+				g_memory[rdata.mdata.ea] = rdata.data;
+		}
 		return 1;
 	}
 	else
@@ -359,7 +372,12 @@ int op_push_0(uint8_t **text_segment, uint8_t op, uint8_t flag,
 {
 	if (op == OP_PUSH_0 && flag == OP_PUSH_0_FLAG)
 	{
-		print_mr(text_segment, "	push", byte2, w);
+		struct mod_data mdata = print_mr(text_segment, "	push", byte2, w);
+		if (mdata.type == MOD_REG)
+			push_reg_stack(mdata.reg, BIT_16);
+		else
+			push_mem_stack(mdata.ea, BIT_16);
+			
 		return 1;
 	}
 	else
@@ -371,7 +389,12 @@ int op_pop_0(uint8_t **text_segment, uint8_t op, uint8_t flag,
 {
 	if (op == OP_POP_0 && flag == OP_POP_0_FLAG)
 	{
-		print_mr(text_segment, "	pop", byte2, w);
+		struct mod_data mdata;
+		mdata = print_mr(text_segment, "	pop", byte2, w);
+		if (mdata.type == MOD_REG)
+			pop_reg_stack(mdata.reg, BIT_16);
+		else
+			pop_mem_stack(mdata.ea, BIT_16);
 		return 1;
 	}
 	else

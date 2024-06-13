@@ -1,9 +1,9 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -g 
+CFLAGS = -Wall -Wextra -g -std=c11
 LDFLAGS =
 LDLIBS =
 
-SRC = main.c file_utils.c prints.c utils.c instructs_dw.c instructs_w.c instructs_reg.c instructs_sw.c instructs.c
+SRC = main.c file_utils.c prints.c utils.c instructs_dw.c instructs_w.c instructs_reg.c instructs_sw.c instructs.c syscalls.c
 
 OBJ = ${SRC:.c=.o}
 EXE = ${SRC:.c=}
