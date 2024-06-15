@@ -1,7 +1,7 @@
 #include "instructs_w.h"
 
 
-int op_w(uint8_t *text_segment, uint16_t *pc)
+int op_w(uint8_t *text_segment, uint16_t *pc, uint16_t *pc)
 {
 	static W_Instruction instructions[] = {
 		op_mov_1,
@@ -42,39 +42,37 @@ int op_w(uint8_t *text_segment, uint16_t *pc)
 	w = W(byte1);
 	flag = FLAG(byte2);
 
-	uint8_t *text_segment_copy = text_segment + *pc + 2;
+	*pc += 2;
 
 	size_t index = 0;
 	while (index < length &&
-		!instructions[index](&text_segment_copy, op, flag, byte2, w))
+		!instructions[index](text_segment, pc, op, flag, byte2, w))
 		index++;
 	if (index < length)
-	{
-		*pc = text_segment_copy - text_segment_copy;
 		return 1;
-	}
 	
 	index = 0;
 	while (index < length_flag &&
-		!flags_instructions[index](&text_segment_copy, byte1, flag, byte2, 0))
+		!flags_instructions[index](text_segment, pc, byte1, 
+								   flag, byte2, 0)
+		)
 		index++;
 
 	if (index < length_flag)
-	{
-		*pc = text_segment - text_segment_copy;
 		return 1;
-	}
+
+	*pc -= 2; // revert
 	return 0;
 }
 
-int op_mov_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
+int op_mov_1(uint8_t *text_segment, uint16_t *pc, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w)
 {
 	if (op == OP_W_MOV_1 &&
 		flag == OP_W_MOV_1_FLAG)
 	{
 		struct print_data rdata;
-		rdata = print_mr_data(text_segment, "	mov", byte2, w);
+		rdata = print_mr_data(text_segment, pc, "	mov", byte2, w);
 
 		if (rdata.mdata.type == MOD_REG)
 		{
@@ -93,14 +91,14 @@ int op_mov_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 		return 0;
 }
 
-int op_mov_3(uint8_t **text_segment, uint8_t op, uint8_t flag,
+int op_mov_3(uint8_t *text_segment, uint16_t *pc, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w)
 {
 	if (op == OP_W_MOV_3)
 	{
-		uint16_t addr = byte2 | (**text_segment << 8);
-		printf("%02hhx%02hhx", byte2, **text_segment);
-		(*text_segment) += 1;
+		uint16_t addr = byte2 | (text_segment[*pc] << 8);
+		printf("%02hhx%02hhx", byte2, text_segment[*pc]);
+		*pc += 1;
 		printf("		mov %s, [%04hx]\n", w ? "ax" : "al", addr);
 		return 1;
 	}
@@ -108,14 +106,14 @@ int op_mov_3(uint8_t **text_segment, uint8_t op, uint8_t flag,
 		return 0;
 }
 
-int op_mov_4(uint8_t **text_segment, uint8_t op, uint8_t flag,
+int op_mov_4(uint8_t *text_segment, uint16_t *pc, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w)
 {
 	if (op == OP_W_MOV_4)
 	{
-		uint16_t addr = byte2 | (**text_segment << 8);
-		printf("%02hhx%02hhx", byte2, **text_segment);
-		(*text_segment) += 1;
+		uint16_t addr = byte2 | (text_segment[*pc] << 8);
+		printf("%02hhx%02hhx", byte2, text_segment[*pc]);
+		*pc += 1;
 		printf("		mov [%04hx], %s\n", addr, w ? "ax" : "al");
 		return 1;
 	}
@@ -123,7 +121,7 @@ int op_mov_4(uint8_t **text_segment, uint8_t op, uint8_t flag,
 		return 0;
 }
 
-int op_add_2(uint8_t **text_segment, uint8_t op, uint8_t flag,
+int op_add_2(uint8_t *text_segment, uint16_t *pc, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w)
 {
 	if (op == OP_ADD_2)
@@ -134,8 +132,8 @@ int op_add_2(uint8_t **text_segment, uint8_t op, uint8_t flag,
 		}
 		else
 		{
-			uint16_t data = byte2 | (**text_segment << 8);
-			printf("%02hhx%02hhx", byte2, **text_segment);
+			uint16_t data = byte2 | (*text_segment << 8);
+			printf("%02hhx%02hhx", byte2, *text_segment);
 			printf("		add ax, %04hx\n", data);
 			(*text_segment) += 1;
 		}
@@ -145,7 +143,7 @@ int op_add_2(uint8_t **text_segment, uint8_t op, uint8_t flag,
 		return 0;
 }
 
-int op_adc_2(uint8_t **text_segment, uint8_t op, uint8_t flag,
+int op_adc_2(uint8_t *text_segment, uint16_t *pc, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w)
 {
 	if (op == OP_W_ADC_2)
@@ -156,8 +154,8 @@ int op_adc_2(uint8_t **text_segment, uint8_t op, uint8_t flag,
 		}
 		else
 		{
-			uint16_t data = byte2 | (**text_segment << 8);
-			printf("%02hhx", **text_segment);
+			uint16_t data = byte2 | (*text_segment << 8);
+			printf("%02hhx", *text_segment);
 			printf("		adc ax, %04hx", data);
 			(*text_segment) += 1;
 		}
@@ -168,7 +166,7 @@ int op_adc_2(uint8_t **text_segment, uint8_t op, uint8_t flag,
 }
 
 
-int op_inc_0(uint8_t **text_segment, uint8_t op, uint8_t flag,
+int op_inc_0(uint8_t *text_segment, uint16_t *pc, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w)
 {
 	if (op == OP_W_INC_0 && flag == OP_W_INC_0_FLAG)
@@ -180,7 +178,7 @@ int op_inc_0(uint8_t **text_segment, uint8_t op, uint8_t flag,
 		return 0;
 }
 
-int op_dec_0(uint8_t **text_segment, uint8_t op, uint8_t flag,
+int op_dec_0(uint8_t *text_segment, uint16_t *pc, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w)
 {
 	if (op == OP_W_DEC_0 && flag == OP_W_DEC_0_FLAG)
@@ -192,7 +190,7 @@ int op_dec_0(uint8_t **text_segment, uint8_t op, uint8_t flag,
 		return 0;
 }
 
-int op_neg(uint8_t **text_segment, uint8_t op, uint8_t flag,
+int op_neg(uint8_t *text_segment, uint16_t *pc, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w)
 {
 	if (op == OP_W_NEG && flag == OP_W_NEG_FLAG)
@@ -205,7 +203,7 @@ int op_neg(uint8_t **text_segment, uint8_t op, uint8_t flag,
 }
 
 // The following four op share the same op, but diff flag
-int op_mul(uint8_t **text_segment, uint8_t op, uint8_t flag,
+int op_mul(uint8_t *text_segment, uint16_t *pc, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w)
 {
 	if (op == OP_W_MUL && flag == OP_W_MUL_FLAG)
@@ -217,7 +215,7 @@ int op_mul(uint8_t **text_segment, uint8_t op, uint8_t flag,
 		return 0;
 }
 
-int op_imul(uint8_t **text_segment, uint8_t op, uint8_t flag,
+int op_imul(uint8_t *text_segment, uint16_t *pc, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w)
 {
 	if (op == OP_W_IMUL && flag == OP_W_IMUL_FLAG)
@@ -229,7 +227,7 @@ int op_imul(uint8_t **text_segment, uint8_t op, uint8_t flag,
 		return 0;
 }
 
-int op_div(uint8_t **text_segment, uint8_t op, uint8_t flag,
+int op_div(uint8_t *text_segment, uint16_t *pc, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w)
 {
 	if (op == OP_W_DIV && flag == OP_W_DIV_FLAG)
@@ -241,8 +239,8 @@ int op_div(uint8_t **text_segment, uint8_t op, uint8_t flag,
 		return 0;
 }
 
-int op_idiv(uint8_t **text_segment, uint8_t op, uint8_t flag,
-	uint8_t byte2, uint8_t w)
+int op_idiv(uint8_t *text_segment, uint16_t *pc, 
+	uint8_t op, uint8_t flag, uint8_t byte2, uint8_t w)
 {
 	if (op == OP_W_IDIV && flag == OP_W_IDIV_FLAG)
 	{
@@ -253,8 +251,8 @@ int op_idiv(uint8_t **text_segment, uint8_t op, uint8_t flag,
 		return 0;
 }
 
-int op_not(uint8_t **text_segment, uint8_t op, uint8_t flag,
-	uint8_t byte2, uint8_t w)
+int op_not(uint8_t *text_segment, uint16_t *pc, 
+	uint8_t op, uint8_t flag, uint8_t byte2, uint8_t w)
 {
 	if (op == OP_W_NOT && flag == OP_W_NOT_FLAG)
 	{
@@ -265,8 +263,8 @@ int op_not(uint8_t **text_segment, uint8_t op, uint8_t flag,
 		return 0;
 }
 
-int op_and_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
-	uint8_t byte2, uint8_t w)
+int op_and_1(uint8_t *text_segment, uint16_t *pc, 
+	uint8_t op, uint8_t flag, uint8_t byte2, uint8_t w)
 {
 	if (op == OP_W_AND_1 && flag == OP_W_AND_1_FLAG)
 	{
@@ -277,8 +275,8 @@ int op_and_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 		return 0;
 }
 
-int op_xchg_0(uint8_t **text_segment, uint8_t op, uint8_t flag,
-	uint8_t byte2, uint8_t w)
+int op_xchg_0(uint8_t *text_segment, uint16_t *pc, 
+	uint8_t op, uint8_t flag, uint8_t byte2, uint8_t w)
 {
 	if (op == OP_XCHG_0)
 	{
@@ -290,7 +288,7 @@ int op_xchg_0(uint8_t **text_segment, uint8_t op, uint8_t flag,
 
 }
 
-int op_test_0(uint8_t **text_segment, uint8_t op, uint8_t flag,
+int op_test_0(uint8_t *text_segment, uint16_t *pc, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w)
 {
 	if (op == OP_W_TEST_0)
@@ -303,7 +301,7 @@ int op_test_0(uint8_t **text_segment, uint8_t op, uint8_t flag,
 
 }
 
-int op_test_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
+int op_test_1(uint8_t *text_segment, uint16_t *pc, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w)
 {
 	if (op == OP_W_TEST_1 && flag == OP_W_TEST_1_FLAG)
@@ -315,7 +313,7 @@ int op_test_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 		return 0;
 }
 
-int op_or_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
+int op_or_1(uint8_t *text_segment, uint16_t *pc, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w)
 {
 	if (op == OP_W_OR_1 && flag == OP_W_OR_1_FLAG)
@@ -327,7 +325,7 @@ int op_or_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 		return 0;
 }
 
-int op_xor_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
+int op_xor_1(uint8_t *text_segment, uint16_t *pc, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w)
 {
 	if (op == OP_W_XOR_1 && flag == OP_W_XOR_1_FLAG)
@@ -339,7 +337,7 @@ int op_xor_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 		return 0;
 }
 
-int op_cmp_2(uint8_t **text_segment, uint8_t op, uint8_t flag,
+int op_cmp_2(uint8_t *text_segment, uint16_t *pc, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w)
 {
 	if (op == OP_W_CMP_2)
@@ -348,8 +346,8 @@ int op_cmp_2(uint8_t **text_segment, uint8_t op, uint8_t flag,
 		printf("%02hhx", byte2);
 		if (w == 1)
 		{
-			printf("%02hhx", **text_segment);
-			data = byte2 | (**text_segment << 8);
+			printf("%02hhx", *text_segment);
+			data = byte2 | (*text_segment << 8);
 			printf("		cmp ax, %04hx\n", data);
 			(*text_segment) += 1;
 		}
@@ -367,7 +365,7 @@ int op_cmp_2(uint8_t **text_segment, uint8_t op, uint8_t flag,
 
 // FLAG ONLY (no w)
 
-int op_push_0(uint8_t **text_segment, uint8_t op, uint8_t flag,
+int op_push_0(uint8_t *text_segment, uint16_t *pc, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w)
 {
 	if (op == OP_PUSH_0 && flag == OP_PUSH_0_FLAG)
@@ -384,7 +382,7 @@ int op_push_0(uint8_t **text_segment, uint8_t op, uint8_t flag,
 		return 0;
 }
 
-int op_pop_0(uint8_t **text_segment, uint8_t op, uint8_t flag,
+int op_pop_0(uint8_t *text_segment, uint16_t *pc, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w)
 {
 	if (op == OP_POP_0 && flag == OP_POP_0_FLAG)
@@ -401,7 +399,7 @@ int op_pop_0(uint8_t **text_segment, uint8_t op, uint8_t flag,
 		return 0;
 }
 
-int op_call_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
+int op_call_1(uint8_t *text_segment, uint16_t *pc, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w)
 {
 	if (op == OP_W_CALL_1 && flag == OP_W_CALL_1_FLAG)
@@ -413,7 +411,7 @@ int op_call_1(uint8_t **text_segment, uint8_t op, uint8_t flag,
 		return 0;
 }
 
-int op_jmp_2(uint8_t **text_segment, uint8_t op, uint8_t flag,
+int op_jmp_2(uint8_t *text_segment, uint16_t *pc, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w)
 {
 	if (op == OP_JMP_2 && flag == OP_JMP_2_FLAG)
@@ -425,7 +423,7 @@ int op_jmp_2(uint8_t **text_segment, uint8_t op, uint8_t flag,
 		return 0;
 }
 
-int op_jmp_4(uint8_t **text_segment, uint8_t op, uint8_t flag,
+int op_jmp_4(uint8_t *text_segment, uint16_t *pc, uint8_t op, uint8_t flag,
 	uint8_t byte2, uint8_t w)
 {
 	if (op == OP_JMP_4 && flag == OP_JMP_4_FLAG)

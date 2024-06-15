@@ -15,27 +15,24 @@
 #include "instructs_dw.h"
 
 
-void instruct(uint8_t **text_segment, long index)
+void instruct()
 {
-	uint8_t op = text_segment[0][0];
+	uint8_t op = g_text_segment[PC];
 
 	print_registers_state();
 	printf("%04lx:%02hhx", index, op);
-	if (op_dw(text_segment))
+	if (op_dw())
 		return;
-	else if (op_sw(text_segment))
+	else if (op_sw())
 		return;
-	else if (op_w(*text_segment, &index))
+	else if (op_w())
 		return;
-	else if (instructs_reg_only(text_segment))
+	else if (instructs_reg_only())
 		return;
-	else if (op_others(text_segment, index))
+	else if (op_others())
 		return;
-	else if (op_pc(text_segment, index))
+	else if (op_pc())
 		return;
-//	else if (op_w2(text_segment))
-//		return;
-	(*text_segment) += 2;
 }
 
 int main(int argc, char **argv)
@@ -51,18 +48,20 @@ int main(int argc, char **argv)
 	struct exec *header = (struct exec *)content;
 
 	uint8_t *text_area = content + header->a_hdrlen;
-	uint8_t *current_text = text_area;
+	// INIT
+	g_g_text_segment = text_area;
+	PC = 0;
+
 	g_memory = text_area + header->a_text;
 
 	printf("sizeof %zu\n", sizeof(struct flags));
 
 	print_registers_header();
-	while (current_text < text_area + header->a_text - 1)
+	while (PC < header->a_text - 1)
 	{
-		//printf("%02hhX ", text_area[i]);
-		instruct(&current_text, current_text - text_area);
+		instruct();
 	}
-	printf("%04lx: 00		(undefined)\n", current_text - text_area);
+	printf("%04lx: 00		(undefined)\n", PC);
 	uint8_t *data_area = text_area + header->a_text;
 	printf("\n");
 	for (int32_t i = 0; i < header->a_data; ++i)

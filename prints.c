@@ -186,7 +186,7 @@ print_mr_sw(uint8_t **text_segment, char *op_name, uint8_t byte2,
 
 
 struct print_data
-print_mr_data(uint8_t **text_segment, char *op_name, uint8_t byte2,
+print_mr_data(uint8_t *text_segment, uint16_t *pc, char *op_name, uint8_t byte2,
 	uint8_t w)
 {
 	uint8_t mod, r_m;
@@ -200,7 +200,7 @@ print_mr_data(uint8_t **text_segment, char *op_name, uint8_t byte2,
 	printf("%02hhx", byte2);
 	for (int i = 0; i < mdata.byte_read; ++i)
 		printf("%02hhx", text_segment[0][i]);
-	(*text_segment) += mdata.byte_read;
+	*pc += mdata.byte_read;
 	int print_tab = mdata.byte_read < 2;
 	
 
@@ -214,7 +214,7 @@ print_mr_data(uint8_t **text_segment, char *op_name, uint8_t byte2,
 			printf("	");
 
 		data = **text_segment | (text_segment[0][1] << 8);
-		(*text_segment) += 2;
+		*pc += 2;
 		printf("%s %s, %04hx", op_name, dest, data);
 	}
 	else
@@ -224,7 +224,7 @@ print_mr_data(uint8_t **text_segment, char *op_name, uint8_t byte2,
 			printf("	");
 
 		data = **text_segment;
-		(*text_segment) += 1;
+		*pc += 1;
 		char is_byte = mod <= 0b10;
 
 		printf("%s %s %s, %2hhx", op_name, is_byte ? "byte" : "", dest, data);

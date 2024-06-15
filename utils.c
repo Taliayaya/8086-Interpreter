@@ -1,10 +1,12 @@
 #include "utils.h"
 
 uint16_t g_registers[8] = {0, 0, 0, 0,
-						  0xffda, 0, 0, 0};
+						  STACK_CAPACITY, 0, 0, 0};
 int8_t *g_memory;
 int8_t g_stack[STACK_CAPACITY] = {0,};
 struct flags g_flags = {0,};
+uint8_t *g_text_segment;
+uint16_t PC;
 
 char *get_reg(uint8_t reg, int w)
 {
@@ -64,13 +66,14 @@ char *get_segreg(uint8_t seg)
 }
 
 struct mod_data
-get_mod(uint8_t **text_segment, uint8_t mod, uint8_t r_m, uint8_t w,
+get_mod(uint8_t *text_segment uint16_t *pc, 
+	uint8_t mod, uint8_t r_m, uint8_t w,
 	char *ea)
 {
 	uint16_t disp;
 	if (mod == 0b00 && r_m == 0b110)
 	{
-		disp = text_segment[0][0] + (text_segment[0][1] << 8);
+		disp = text_segment[*pc] + (text_segment[*pc + 1] << 8);
 		sprintf(ea, "[%04hx]", disp);
 		return (struct mod_data){MOD_EA, 2, disp, 0};
 	}
@@ -80,13 +83,13 @@ get_mod(uint8_t **text_segment, uint8_t mod, uint8_t r_m, uint8_t w,
 			sprintf(ea, "[%s]",  get_r_m(r_m));
 			return (struct mod_data){MOD_EA, 0, get_disp(r_m, 0), 0};
 		case 0b01:
-			disp = text_segment[0][0];
+			disp = text_segment[*pc];
 			uint8_t adisp = (disp & 0x80) ? (~disp + 1) : disp;
 			sprintf(ea, "[%s%c%hhx]", get_r_m(r_m),
 				(disp & 0x80) ? '-' : '+', adisp);
 			return (struct mod_data){MOD_EA, 1, get_disp(r_m, adisp), 0};
 		case 0b10:
-			disp = (int16_t)((text_segment[0][1] << 8) | text_segment[0][0]);
+			disp = (int16_t)((text_segment[*pc + 1] << 8) | text_segment[*pc]);
 
 			int16_t adisp16 = (disp & 0x8000) ? (~disp + 1) : disp;
 

@@ -134,12 +134,14 @@ extern uint16_t g_registers[8];
 extern int8_t *g_memory;
 extern int8_t g_stack[STACK_CAPACITY];
 extern struct flags g_flags;
+extern uint8_t *g_text_segment;
+extern uint16_t PC;
 
 char *get_reg(uint8_t reg, int w);
 char *get_r_m(uint8_t r_m);
 char *get_segreg(uint8_t seg);
 
-struct mod_data get_mod(uint8_t **text_segment, uint8_t mod, uint8_t r_m, 
+struct mod_data get_mod(uint8_t *text_segment, uint16_t *pc, uint8_t mod, uint8_t r_m, 
 	uint8_t w, char *ea);
 
 uint16_t get_disp(uint8_t r_m, int16_t disp);

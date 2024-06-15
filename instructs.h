@@ -264,65 +264,65 @@
 #define OP_ESC_MSK		0b11111000
 #define OP_LOCK			0b11110000
 
-int op_others(uint8_t **text_segment, uint16_t pc);
-int op_pc(uint8_t **text_segment, uint16_t pc);
+int op_others();
+int op_pc();
 // MOV
-int op_mov_2(uint8_t **text_segment, uint8_t byte1);
+int op_mov_2(uint8_t byte1);
 
 // PUSH
-int op_push_2(uint8_t **text_segment, uint8_t byte1);
+int op_push_2(uint8_t byte1);
 
 // POP
-int op_pop_2(uint8_t **text_segment, uint8_t byte1);
+int op_pop_2(uint8_t byte1);
 
 // IN = Input from
-int op_in(uint8_t **text_segment, uint8_t byte1);
+int op_in(uint8_t byte1);
 
 // OUT = Output from
-int op_out(uint8_t **text_segment, uint8_t byte1);
+int op_out(uint8_t byte1);
 
-int op_sub_2(uint8_t **text_segment, uint8_t byte1);
-int op_ssb_2(uint8_t **text_segment, uint8_t byte1);
+int op_sub_2(uint8_t byte1);
+int op_ssb_2(uint8_t byte1);
 
-int op_logic(uint8_t **text_segment, uint8_t byte1);
+int op_logic(uint8_t byte1);
 
 
-int op_clc(uint8_t **text_segment, uint8_t op);
-int op_cmc(uint8_t **text_segment, uint8_t op);
-int op_stc(uint8_t **text_segment, uint8_t op);
-int op_cld(uint8_t **text_segment, uint8_t op);
-int op_std(uint8_t **text_segment, uint8_t op);
-int op_cli(uint8_t **text_segment, uint8_t op);
-int op_sti(uint8_t **text_segment, uint8_t op);
-int op_hlt(uint8_t **text_segment, uint8_t op);
-int op_wait(uint8_t **text_segment, uint8_t op);
+int op_clc(uint8_t op);
+int op_cmc(uint8_t op);
+int op_stc(uint8_t op);
+int op_cld(uint8_t op);
+int op_std(uint8_t op);
+int op_cli(uint8_t op);
+int op_sti(uint8_t op);
+int op_hlt(uint8_t op);
+int op_wait(uint8_t op);
 
 // LOAD & FLAGS STUFF
-int op_xlat(uint8_t **text_segment, uint8_t op);
+int op_xlat(uint8_t op);
 
-int op_lea(uint8_t **text_segment, uint8_t op);
-int op_lds(uint8_t **text_segment, uint8_t op);
-int op_les(uint8_t **text_segment, uint8_t op);
+int op_lea(uint8_t op);
+int op_lds(uint8_t op);
+int op_les(uint8_t op);
 
-int op_lahf(uint8_t **text_segment, uint8_t op);
-int op_sahf(uint8_t **text_segment, uint8_t op);
-int op_pushf(uint8_t **text_segment, uint8_t op);
-int op_popf(uint8_t **text_segment, uint8_t op);
+int op_lahf(uint8_t op);
+int op_sahf(uint8_t op);
+int op_pushf(uint8_t op);
+int op_popf(uint8_t op);
 
 // PC
-int op_call_0(uint8_t **text_segment, uint8_t op, uint16_t pc);
+int op_call_0(uint8_t op);
 
-int op_jmp(uint8_t **text_segment, uint8_t op, uint16_t pc);
-int op_cond_jmp(uint8_t **text_segment, uint8_t op, uint16_t pc);
+int op_jmp(uint8_t op);
+int op_cond_jmp(uint8_t op);
 
-int op_int(uint8_t **text_segment, uint8_t op);
-int op_ret(uint8_t **text_segment, uint8_t op);
-int op_cbw(uint8_t **text_segment, uint8_t op);
-int op_cwd(uint8_t **text_segment, uint8_t op);
+int op_int(uint8_t op);
+int op_ret(uint8_t op);
+int op_cbw(uint8_t op);
+int op_cwd(uint8_t op);
 
-int op_test_2(uint8_t **text_segment, uint8_t byte1);
-int op_rep(uint8_t **text_segment, uint8_t byte1);
-int op_string(uint8_t **text_segment, uint8_t byte1);
+int op_test_2(uint8_t byte1);
+int op_rep(uint8_t byte1);
+int op_string(uint8_t byte1);
 
 
 
