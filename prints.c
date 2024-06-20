@@ -19,8 +19,42 @@ void print_registers_state(void)
 	);
 }
 
-struct mrr_data
-print_mrr(uint8_t **text_segment, char *op_name, uint8_t byte2, 
+void print_memory_content(struct operation_data data, uint8_t w)
+{
+	printf(" ;[%04hx]", data._ea);
+	if (w)
+	{
+		int16_t mem_data = get_memory(g_memory, 
+			data._ea, BIT_16);
+		printf("%04hx", mem_data);
+	}
+	else
+	{
+		int16_t mem_data = get_memory(g_memory, 
+			data._ea, BIT_8);
+		printf("%02hhx", mem_data);
+	}
+}
+
+void pretty_print(uint16_t byte_start, size_t count, char *instr)
+{
+
+ 	char concatenated[2 * count + 1]; 
+    concatenated[0] = '\0';
+
+	char temp[4];
+
+    for (size_t i = 0; i < count; i++)
+    {
+        sprintf(temp, "%02x", g_text_segment[byte_start + i]);
+
+        strcat(concatenated, temp);
+    }
+    printf("%-14s%s", concatenated, instr);
+}
+
+struct print_data
+print_mrr(char *op_name, uint8_t byte2, 
 	uint8_t d, uint8_t w)
 {
 	uint8_t mod, reg, r_m;
@@ -32,39 +66,45 @@ print_mrr(uint8_t **text_segment, char *op_name, uint8_t byte2,
 	source = get_reg(reg, w);
 	dest = malloc(EA_STRING_SIZE * sizeof(unsigned char));
 
-	struct mod_data data = get_mod(text_segment, mod, r_m, w, dest);
+	struct mod_data data = get_mod(mod, r_m, w, dest);
+	
+	struct print_data rdata;
+	PC += data.byte_read;
 
-	struct mrr_data rdata;
-	rdata.mdata = data;
-
-	printf("%02hhx", byte2);
-	for (int i = 0; i < data.byte_read; ++i)
-		printf("%02hhx", text_segment[0][i]);
-	(*text_segment) += data.byte_read;
-
-	printf("	");
-	printf("%s ", op_name);
+	char instr[32];
 	if (d != 0)
 	{
-		printf("%s, %s\n",
-			source, dest);
-		rdata.reg_from = r_m;
-		rdata.reg_to = reg;
+		rdata.data_left = (struct operation_data)
+			{.type=MOD_REG, ._reg=reg};
+		rdata.data_right = data.memory;
 	}
 	else
 	{
-		printf("%s, %s\n", 
-			dest, source);
-		rdata.reg_from = reg;
-		rdata.reg_to = r_m;
+
+		char *tmp;
+		tmp = dest;
+		dest = source;
+		source = tmp;
+
+		rdata.data_right = (struct operation_data)
+			{.type=MOD_REG, ._reg=reg};
+		rdata.data_left = data.memory;
+
 	}
-		
-	free(dest);
+
+
+	sprintf(instr, "%s %s, %s", op_name, source, dest);
+	pretty_print(PC - 1, data.byte_read + 1, instr);
+
+	if (data.memory.type == MOD_EA)
+		print_memory_content(data.memory, w);
+	printf("\n");
+
 	return rdata;
 }
 
-struct mod_data
-print_mr(uint8_t **text_segment, char *op_name, uint8_t byte2, 
+struct operation_data
+print_mr(char *op_name, uint8_t byte2, 
 	 uint8_t w)
 {
 	uint8_t mod, r_m;
@@ -73,23 +113,19 @@ print_mr(uint8_t **text_segment, char *op_name, uint8_t byte2,
 
 	char *dest;
 	dest = malloc(EA_STRING_SIZE * sizeof(unsigned char));
-	struct mod_data data = get_mod(text_segment, mod, r_m, w, dest);
+	struct mod_data data = get_mod(mod, r_m, w, dest);
 
-	printf("%02hhx", byte2);
-	for (int i = 0; i < data.byte_read; ++i)
-		printf("%02hhx", text_segment[0][i]);
-	(*text_segment) += data.byte_read;
-	if (data.byte_read < 3)
-		printf("	");
-
-	printf("%s %s\n", op_name, dest);
+	char instr[32];
+	sprintf(instr, "%s %s\n", op_name, dest);
+	pretty_print(PC - 1, data.byte_read + 1, instr);
 		
+	PC += data.byte_read;
 	free(dest);
-	return data;
+	return data.memory;
 
 }
 
-void print_mr_vw(uint8_t **text_segment, char *op_name, uint8_t byte2, 
+void print_mr_vw(char *op_name, uint8_t byte2, 
 	 uint8_t v, uint8_t w)
 {
 	uint8_t mod, r_m;
@@ -98,21 +134,20 @@ void print_mr_vw(uint8_t **text_segment, char *op_name, uint8_t byte2,
 
 	char *dest;
 	dest = malloc(EA_STRING_SIZE * sizeof(unsigned char));
-	struct mod_data data = get_mod(text_segment, mod, r_m, w, dest);
+	struct mod_data data = get_mod(mod, r_m, w, dest);
 
-	printf("%02hhx", byte2);
-	for (int i = 0; i < data.byte_read; ++i)
-		printf("%02hhx", text_segment[0][i]);
-	(*text_segment) += data.byte_read;
+	char instr[32];
+	sprintf(instr, "%s %s, %s\n", op_name, dest, v ? "cl" : "1");
 
-	printf("	%s %s, %s\n", op_name, dest, v ? "cl" : "1");
+	pretty_print(PC - 1, data.byte_read + 1, instr);
+	PC += data.byte_read;
 		
 	free(dest);
 
 }
 
 struct print_data
-print_mr_sw(uint8_t **text_segment, char *op_name, uint8_t byte2,
+print_mr_sw(char *op_name, uint8_t byte2,
 	uint8_t s, uint8_t w, uint8_t digit)
 {
 	uint8_t mod, r_m;
@@ -121,72 +156,62 @@ print_mr_sw(uint8_t **text_segment, char *op_name, uint8_t byte2,
 
 	char *dest;
 	dest = malloc(EA_STRING_SIZE * sizeof(unsigned char));
-	struct mod_data mdata = get_mod(text_segment, mod, r_m, w, dest);
+	struct mod_data mdata = get_mod(mod, r_m, w, dest);
 
-	printf("%02hhx", byte2);
-	for (int i = 0; i < mdata.byte_read; ++i)
-		printf("%02hhx", text_segment[0][i]);
-	(*text_segment) += mdata.byte_read;
-	int print_tab = mdata.byte_read < 2;
 
-	uint16_t data = text_segment[0][0];
-	printf("%02hhx", text_segment[0][0]);
+	size_t byte_read = 1 + mdata.byte_read;
 
 	char is_byte = mod <= 0b10 && !w; 
 
 	struct print_data return_data;
-	return_data.mdata = mdata;
+	return_data.data_left = mdata.memory;
+
+	char instr[32];
+
+	PC += mdata.byte_read;
+
+	uint16_t data = g_text_segment[PC];
 	if (s == 0 && w == 1)
 	{
-		printf("%02hhx", text_segment[0][1]);
-		if (print_tab)
-			printf("	");
-		data |= text_segment[0][1] << 8;
-		(*text_segment) += 2;
+		byte_read += 2;
+		data |= g_text_segment[PC + 1] << 8;
+		PC += 2;
 
-		int16_t pos = *(int16_t *)(g_memory + mdata.ea);
 			// setting flags
-		printf("%s %s, %04hx ;%s%04hx\n", 
-			op_name, dest, data, dest, pos);
-		return_data.mem_data = pos;
-
+		sprintf(instr, "%s %s, %04hx", 
+			op_name, dest, data);
+		return_data.data_right = (struct operation_data)
+			{.type=MOD_IMM_16, ._imm16=data};
 	}
 	else
 	{
-		(*text_segment) += 1;
-		if (print_tab)
-			printf("	");
+		PC += 1;
+		byte_read += 1;
 
-		printf("%s%s %s, ", 
-			op_name, !is_byte ? "" : " byte", dest);
-		if (data & 0x80)
-			printf("%hi ", (int8_t)data);
-		else
-			printf("%hx ", data);
-		if (w == 1)
-		{
-			int16_t pos = *(int16_t *)(g_memory + mdata.ea);
-			printf(";%s%hx\n", dest, pos);
-			return_data.mem_data = pos;
+		char data_str[4];
+		sprintf(data_str, data & 0x80 ? "%hi"  : "%hx", (int8_t)data);
 
-		}
-		else
-		{
-			int8_t pos = g_memory[mdata.ea];
-			printf(";%s%hhx\n", dest, pos);
-			return_data.mem_data = pos;
-		}
+		return_data.data_right = (struct operation_data)
+			{.type=MOD_IMM_8, ._imm8=data};
+
+		sprintf(instr, "%s%s %s, %s", 
+			op_name, !is_byte ? "" : " byte", dest, data_str);
+
 
 	}
+
+	pretty_print(PC - byte_read, byte_read, instr);
+	if (mdata.memory.type == MOD_EA)
+		print_memory_content(mdata.memory, w);
+	printf("\n");
 	free(dest);
-	return_data.data = data;
 	return return_data;
 
 }
 
 
 struct print_data
-print_mr_data(uint8_t *text_segment, uint16_t *pc, char *op_name, uint8_t byte2,
+print_mr_data(char *op_name, uint8_t byte2,
 	uint8_t w)
 {
 	uint8_t mod, r_m;
@@ -195,56 +220,43 @@ print_mr_data(uint8_t *text_segment, uint16_t *pc, char *op_name, uint8_t byte2,
 
 	char *dest;
 	dest = malloc(EA_STRING_SIZE * sizeof(unsigned char));
-	struct mod_data mdata = get_mod(text_segment, mod, r_m, w, dest);
+	struct mod_data mdata = get_mod(mod, r_m, w, dest);
 
-	printf("%02hhx", byte2);
-	for (int i = 0; i < mdata.byte_read; ++i)
-		printf("%02hhx", text_segment[0][i]);
-	*pc += mdata.byte_read;
-	int print_tab = mdata.byte_read < 2;
-	
+	size_t byte_read = mdata.byte_read + 1;
+
+	PC += mdata.byte_read;
 
 	struct print_data rdata; // return data
-	rdata.mdata = mdata;
+	rdata.data_left = mdata.memory;
 	uint16_t data;
+
+	char instr[32];
 	if (w == 1)
 	{
-		printf("%02hhx%02hhx", **text_segment, text_segment[0][1]);
-		if (mdata.byte_read < 1)
-			printf("	");
+		byte_read += 2;
 
-		data = **text_segment | (text_segment[0][1] << 8);
-		*pc += 2;
-		printf("%s %s, %04hx", op_name, dest, data);
+		data = g_text_segment[PC] | (g_text_segment[PC + 1] << 8);
+		rdata.data_right = (struct operation_data)
+			{.type=MOD_IMM_16, ._imm16=data};
+		PC += 2;
+		sprintf(instr, "%s %s, %04hx", op_name, dest, data);
 	}
 	else
 	{
-		printf("%02hhx", **text_segment);
-		if (print_tab)
-			printf("	");
-
-		data = **text_segment;
-		*pc += 1;
+		data = g_text_segment[PC];
+		PC += 1;
+		byte_read += 1;
 		char is_byte = mod <= 0b10;
+		rdata.data_right = (struct operation_data)
+			{.type=MOD_IMM_8, ._imm8=data};
 
-		printf("%s %s %s, %2hhx", op_name, is_byte ? "byte" : "", dest, data);
+		sprintf(instr, "%s %s %s, %2hhx", op_name, is_byte ? "byte" : "", dest, data);
 	}
 
-	rdata.data = data;
-	if (mdata.type == MOD_EA)
-	{
-		printf("; %s", dest);
-		if (w)
-		{
-			rdata.mem_data = *(int16_t *)(g_memory + rdata.mdata.ea);
-			printf("%04hx", rdata.mem_data);
-		}
-		else
-		{
-			rdata.mem_data = g_memory[rdata.mdata.ea];
-			printf("%02hhx", rdata.mem_data);
-		}
-	}
+	pretty_print(PC - byte_read, byte_read, instr);
+	if (mdata.memory.type == MOD_EA)
+		print_memory_content(rdata.data_left, w);
+
 	printf("\n");
 
 	free(dest);

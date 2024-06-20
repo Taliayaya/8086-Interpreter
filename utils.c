@@ -3,7 +3,7 @@
 uint16_t g_registers[8] = {0, 0, 0, 0,
 						  STACK_CAPACITY, 0, 0, 0};
 int8_t *g_memory;
-int8_t g_stack[STACK_CAPACITY] = {0,};
+int8_t *g_stack;
 struct flags g_flags = {0,};
 uint8_t *g_text_segment;
 uint16_t PC;
@@ -23,6 +23,7 @@ char *get_reg(uint8_t reg, int w)
 
 uint16_t get_disp(uint8_t r_m, int16_t disp)
 {
+	//printf("disp: %hx %hi=", disp, disp);
 	switch (r_m)
 	{
 		case 0b000:
@@ -66,42 +67,58 @@ char *get_segreg(uint8_t seg)
 }
 
 struct mod_data
-get_mod(uint8_t *text_segment uint16_t *pc, 
+get_mod( 
 	uint8_t mod, uint8_t r_m, uint8_t w,
 	char *ea)
 {
+	struct operation_data mem_data;
 	uint16_t disp;
 	if (mod == 0b00 && r_m == 0b110)
 	{
-		disp = text_segment[*pc] + (text_segment[*pc + 1] << 8);
+		disp = g_text_segment[PC] + (g_text_segment[PC + 1] << 8);
 		sprintf(ea, "[%04hx]", disp);
-		return (struct mod_data){MOD_EA, 2, disp, 0};
+
+		mem_data.type = MOD_EA;
+		mem_data.data.ea = disp;
+		return (struct mod_data){.byte_read=2, .memory=mem_data};
 	}
 	switch (mod)
 	{
 		case 0b00:
 			sprintf(ea, "[%s]",  get_r_m(r_m));
-			return (struct mod_data){MOD_EA, 0, get_disp(r_m, 0), 0};
+			mem_data.type = MOD_EA;
+			mem_data.data.ea = get_disp(r_m, 0);
+			return (struct mod_data){.byte_read=0, .memory=mem_data};
+
 		case 0b01:
-			disp = text_segment[*pc];
+			disp = g_text_segment[PC];
 			uint8_t adisp = (disp & 0x80) ? (~disp + 1) : disp;
 			sprintf(ea, "[%s%c%hhx]", get_r_m(r_m),
 				(disp & 0x80) ? '-' : '+', adisp);
-			return (struct mod_data){MOD_EA, 1, get_disp(r_m, adisp), 0};
-		case 0b10:
-			disp = (int16_t)((text_segment[*pc + 1] << 8) | text_segment[*pc]);
 
+			mem_data.type = MOD_EA;
+			mem_data.data.ea = get_disp(r_m, 
+				(disp & 0x80) ? -adisp : adisp);
+			return (struct mod_data){.byte_read=1, .memory=mem_data};
+
+		case 0b10:
+			disp = (int16_t)((g_text_segment[PC + 1] << 8) | g_text_segment[PC]);
 			int16_t adisp16 = (disp & 0x8000) ? (~disp + 1) : disp;
 
 			char *ealeft = get_r_m(r_m);
 			char sign = (disp & 0x8000) ? '-' : '+';
 			sprintf(ea, "[%s%c%hx]", ealeft,
 				sign, adisp16);
-			return (struct mod_data){MOD_EA, 0, get_disp(r_m, adisp16), 2};
+
+			mem_data.type = MOD_EA;
+			mem_data._ea = get_disp(r_m, adisp16);
+			return (struct mod_data){.byte_read=2, .memory=mem_data};
 
 		case 0b11:
 			sprintf(ea, "%s", get_reg(r_m, w));
-			return (struct mod_data){MOD_REG, 0, 0, r_m};
+			mem_data.type = MOD_REG;
+			mem_data.data.reg = r_m;
+			return (struct mod_data){.byte_read=0, .memory=mem_data};
 	}
 }
 
@@ -125,7 +142,7 @@ get_registers(uint16_t registers[8], uint8_t reg, uint8_t w)
 }
 
 void
-set_memory(int8_t *memory, uint16_t ea, int16_t data, uint8_t w)
+set_memory(int8_t *memory, uint16_t ea, uint8_t w, int16_t data)
 {
 	if (w)
 		*(int16_t *)(g_memory + ea) = data;
@@ -177,7 +194,7 @@ void push_reg_stack(uint8_t reg, uint8_t w)
 void pop_reg_stack(uint8_t reg, uint8_t w)
 {
 	uint16_t data = pop_stack(w);
-	set_registers(g_registers, reg, data, w);
+	set_registers(g_registers, reg,  w, data);
 }
 
 void push_mem_stack(uint8_t ea, uint8_t w)
@@ -189,8 +206,28 @@ void push_mem_stack(uint8_t ea, uint8_t w)
 void pop_mem_stack(uint8_t ea, uint8_t w)
 {
 	uint16_t data = pop_stack(w);
-	set_memory(g_memory, ea, data, w);
-
+	set_memory(g_memory, ea, w, data);
 }
 
+void update_sf(struct flags *flags, int16_t result)
+{
+	flags->SF = result < 0;	
+}
+
+void update_pf(struct flags *flags, int16_t result)
+{
+    int parity_count = 0;
+    unsigned char ls_byte = result & 0xFF;
+    for (int i = 0; i < 8; ++i)
+	{
+        if (ls_byte & (1 << i)) 
+            parity_count++;
+    }
+	flags->PF = parity_count % 2 == 0;
+}
+
+void update_zf(struct flags *flags, int16_t result)
+{
+	flags->ZF = result == 0;
+}
 

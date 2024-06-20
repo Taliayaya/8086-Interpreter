@@ -20,7 +20,7 @@ void instruct()
 	uint8_t op = g_text_segment[PC];
 
 	print_registers_state();
-	printf("%04lx:%02hhx", index, op);
+	printf("%04lx:%02hhx", PC, op);
 	if (op_dw())
 		return;
 	else if (op_sw())
@@ -49,10 +49,18 @@ int main(int argc, char **argv)
 
 	uint8_t *text_area = content + header->a_hdrlen;
 	// INIT
-	g_g_text_segment = text_area;
+	g_text_segment = text_area;
 	PC = 0;
 
-	g_memory = text_area + header->a_text;
+	g_memory = malloc(STACK_CAPACITY);
+	// copy the data area into the memory
+	// maybe make it "static" / readonly?
+	uint8_t *data_area = text_area + header->a_text;
+	for (int i = 0; i < header->a_data; ++i)
+		g_memory[i] = data_area[i];
+
+	g_stack = g_memory; // same memory space
+	//set_registers(g_registers, SP, BIT_16, header->a_data);
 
 	printf("sizeof %zu\n", sizeof(struct flags));
 
@@ -61,8 +69,7 @@ int main(int argc, char **argv)
 	{
 		instruct();
 	}
-	printf("%04lx: 00		(undefined)\n", PC);
-	uint8_t *data_area = text_area + header->a_text;
+	printf("%04hx: 00		(undefined)\n", PC);
 	printf("\n");
 	for (int32_t i = 0; i < header->a_data; ++i)
 		printf("%c", data_area[i]);

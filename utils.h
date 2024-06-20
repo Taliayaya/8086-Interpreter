@@ -56,8 +56,8 @@ struct	exec {			/* a.out header */
 #define BX 0b011
 #define SP 0b100
 #define BP 0b101
-#define SI 0b010
-#define DI 0b011
+#define SI 0b110
+#define DI 0b111
 
 #define GET_REGISTER(g_regs, reg, w) (w ? g_regs[reg] : g_regs[reg] & 0x00FF)
 #define BIT_16 1
@@ -103,7 +103,7 @@ struct flags
 	uint8_t DF : 1; //
 	uint8_t IF : 1; //
 	uint8_t TF : 1; //
-	uint8_t SF : 1; // Stack Pointer 	| 2
+	uint8_t SF : 1; // Negative		 	| 2
 	uint8_t ZF : 1; // Zero 			| 4
 	uint8_t AF : 1;
 	uint8_t PF : 1;
@@ -113,26 +113,42 @@ struct flags
 enum mod_data_type
 {
 	MOD_EA,
-	MOD_REG
+	MOD_REG,
+	MOD_IMM_16,
+	MOD_IMM_8
 };
+
+// shortcuts for union
+#define _reg	data.reg
+#define _ea		data.ea
+#define _imm8	data.immediate_8
+#define _imm16 	data.immediate_16
+
+struct operation_data
+{
+	enum mod_data_type type;
+	union
+	{
+		uint8_t reg : 3;
+		uint16_t ea;
+		uint16_t immediate_16;
+		uint8_t immediate_8;
+	} data;
+};
+
+
 
 struct mod_data
 {
-	enum mod_data_type type;
 	uint8_t byte_read : 2;
-	// case 1
-	uint16_t ea;
-	uint16_t data;
-
-	uint8_t reg : 3;
-
+	struct operation_data memory;
 };
 
 
 // GLOBALS (its bad)
 extern uint16_t g_registers[8];
 extern int8_t *g_memory;
-extern int8_t g_stack[STACK_CAPACITY];
+extern int8_t *g_stack;
 extern struct flags g_flags;
 extern uint8_t *g_text_segment;
 extern uint16_t PC;
@@ -141,7 +157,7 @@ char *get_reg(uint8_t reg, int w);
 char *get_r_m(uint8_t r_m);
 char *get_segreg(uint8_t seg);
 
-struct mod_data get_mod(uint8_t *text_segment, uint16_t *pc, uint8_t mod, uint8_t r_m, 
+struct mod_data get_mod(uint8_t mod, uint8_t r_m, 
 	uint8_t w, char *ea);
 
 uint16_t get_disp(uint8_t r_m, int16_t disp);
@@ -157,7 +173,7 @@ get_registers(uint16_t registers[8], uint8_t reg, uint8_t w);
 
 
 void
-set_memory(int8_t *memory, uint16_t ea, int16_t data, uint8_t w);
+set_memory(int8_t *memory, uint16_t ea, uint8_t w, int16_t data);
 
 
 int16_t
@@ -171,5 +187,9 @@ void pop_reg_stack(uint8_t reg, uint8_t w);
 
 void push_mem_stack(uint8_t ea, uint8_t w);
 void pop_mem_stack(uint8_t ea, uint8_t w);
+
+void update_sf(struct flags *flags, int16_t result);
+void update_pf(struct flags *flags, int16_t result);
+void update_zf(struct flags *flags, int16_t result);
 
 #endif

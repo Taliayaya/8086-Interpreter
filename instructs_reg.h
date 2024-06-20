@@ -4,7 +4,7 @@
 typedef int (*reg_instruction)(uint8_t, uint8_t);
 
 
-int instructs_reg_only(uint8_t **text_segment);
+int instructs_reg_only();
 
 // reg instructions (0 1 0 1 0 reg)
 

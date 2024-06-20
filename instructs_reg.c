@@ -4,19 +4,19 @@
 
 typedef int (*reg_instruction)(uint8_t, uint8_t);
 
-int instructs_reg_only(uint8_t **text_segment)
+int instructs_reg_only()
 {
-	reg_instruction instructions[] = {
+	static reg_instruction instructions[] = {
 		op_push_1,
 		op_pop_1,
 		op_xchg_1,
 		op_inc_1,
 		op_dec_1
 	};
-	size_t length = sizeof(instructions) / sizeof(reg_instruction);
+	static size_t length = sizeof(instructions) / sizeof(reg_instruction);
 
 	uint8_t byte1, op, reg;
-	byte1 = **text_segment;
+	byte1 = g_text_segment[PC];
 	op = byte1  & 0b11111000;
 	reg = byte1 & 0b00000111;
 
@@ -30,7 +30,7 @@ int instructs_reg_only(uint8_t **text_segment)
 
 	if (index < length)
 	{
-		*text_segment += 1;
+		PC += 1;
 		return 1;
 	}
 	return 0;
@@ -40,14 +40,16 @@ int instructs_reg_only(uint8_t **text_segment)
 
 void print_reg(char *op_name, uint8_t reg, uint8_t w)
 {
-	printf("	%s %s\n", op_name, get_reg(reg, w));
+	char instr[32];
+	sprintf(instr, "%s %s\n", op_name, get_reg(reg, w));
+	pretty_print(PC + 1, 0, instr);
 }
 
 int op_push_1(uint8_t op, uint8_t reg)
 {
 	if (op == OP_PUSH_1)
 	{
-		print_reg("	push", reg, DEFAULT_W);
+		print_reg("+push", reg, DEFAULT_W);
 		push_reg_stack(reg, BIT_16);
 		return 1;
 	}
@@ -59,7 +61,7 @@ int op_pop_1(uint8_t op, uint8_t reg)
 {
 	if (op == OP_POP_1)
 	{
-		print_reg("	pop", reg, DEFAULT_W);
+		print_reg("+pop", reg, DEFAULT_W);
 		pop_reg_stack(reg, BIT_16);
 		return 1;
 	}
@@ -72,7 +74,9 @@ int op_xchg_1(uint8_t op, uint8_t reg)
 {
 	if (op == OP_XCHG_1)
 	{
-		printf("		xchg %s, ax\n", get_reg(reg, DEFAULT_W));
+		char instr[32];
+		sprintf(instr, "xchg %s, ax\n", get_reg(reg, DEFAULT_W));
+		pretty_print(PC + 1, 0, instr);
 		return 1;
 	}
 	else
@@ -83,7 +87,7 @@ int op_inc_1(uint8_t op, uint8_t reg)
 {
 	if (op == OP_INC_1)
 	{
-		print_reg("	inc", reg, DEFAULT_W);
+		print_reg("inc", reg, DEFAULT_W);
 		return 1;
 	}
 	else
@@ -94,7 +98,7 @@ int op_dec_1(uint8_t op, uint8_t reg)
 {
 	if (op == OP_DEC_1)
 	{
-		print_reg("	dec", reg, DEFAULT_W);
+		print_reg("dec", reg, DEFAULT_W);
 		return 1;
 	}
 	else
