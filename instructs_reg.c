@@ -87,7 +87,15 @@ int op_inc_1(uint8_t op, uint8_t reg)
 {
 	if (op == OP_INC_1)
 	{
-		print_reg("inc", reg, DEFAULT_W);
+		print_reg("+inc", reg, DEFAULT_W);
+		uint16_t data;
+		data = get_registers(g_registers, reg, BIT_16);
+		set_registers(g_registers, reg, BIT_16, data + 1);
+		// do not touch CF
+		// OF SF ZF AF
+		g_flags.ZF = (data + 1) == 0;
+		g_flags.OF = data == 0xFFFF;
+		g_flags.SF = ((data + 1) & 0x8000) == 0x8000;
 		return 1;
 	}
 	else
@@ -98,7 +106,15 @@ int op_dec_1(uint8_t op, uint8_t reg)
 {
 	if (op == OP_DEC_1)
 	{
-		print_reg("dec", reg, DEFAULT_W);
+		print_reg("+dec", reg, DEFAULT_W);
+		uint16_t data = get_registers(g_registers, reg, BIT_16);
+		set_registers(g_registers, reg, BIT_16, data - 1);
+
+		g_flags.ZF = (data - 1) == 0;
+		g_flags.OF = data && ((data - 1) & 0x8000) != (data & 0x8000); // 0 - 1 = -1 is a valid operation
+		g_flags.OF = 0;
+		g_flags.SF = ((data - 1) & 0x8000) == 0x8000;
+
 		return 1;
 	}
 	else

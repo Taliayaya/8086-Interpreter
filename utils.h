@@ -63,7 +63,10 @@ struct	exec {			/* a.out header */
 #define BIT_16 1
 #define BIT_8  0
 
-#define STACK_CAPACITY 0xFFDA
+#define IS_NEG16(x) ((x & 0x8000) == 0x8000)
+#define IS_NEG8(x)	((x & 0x80)	  == 0x80)
+
+#define STACK_CAPACITY 0xFFFF
 
 struct op_w_flags
 {
@@ -185,10 +188,10 @@ uint16_t pop_stack(uint8_t w);
 void push_reg_stack(uint8_t reg, uint8_t w);
 void pop_reg_stack(uint8_t reg, uint8_t w);
 
-void push_mem_stack(uint8_t ea, uint8_t w);
-void pop_mem_stack(uint8_t ea, uint8_t w);
+void push_mem_stack(uint16_t ea, uint8_t w);
+void pop_mem_stack(uint16_t ea, uint8_t w);
 
-void update_sf(struct flags *flags, int16_t result);
+void update_sf(struct flags *flags, int16_t result, uint8_t w);
 void update_pf(struct flags *flags, int16_t result);
 void update_zf(struct flags *flags, int16_t result);
 

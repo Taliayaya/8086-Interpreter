@@ -12,10 +12,10 @@ void print_registers_state(void)
 		g_registers[DX], g_registers[SP], g_registers[BP],
 		g_registers[SI], g_registers[DI]);
 	printf("%c%c%c%c ",
-		g_flags.CF ? 'C' : '-',
-		g_flags.SF ? 'S' : '-',
 		g_flags.OF ? 'O' : '-',
-		g_flags.ZF ? 'Z' : '-'
+		g_flags.SF ? 'S' : '-',
+		g_flags.ZF ? 'Z' : '-',
+		g_flags.CF ? 'C' : '-'
 	);
 }
 
@@ -116,8 +116,12 @@ print_mr(char *op_name, uint8_t byte2,
 	struct mod_data data = get_mod(mod, r_m, w, dest);
 
 	char instr[32];
-	sprintf(instr, "%s %s\n", op_name, dest);
+	sprintf(instr, "%s %s", op_name, dest);
 	pretty_print(PC - 1, data.byte_read + 1, instr);
+
+	if (data.memory.type == MOD_EA)
+		print_memory_content(data.memory, w);
+	printf("\n");
 		
 	PC += data.byte_read;
 	free(dest);
@@ -261,4 +265,66 @@ print_mr_data(char *op_name, uint8_t byte2,
 
 	free(dest);
 	return rdata;
+}
+
+uint16_t compute_calc(enum calc_type type, uint16_t a, uint16_t b)
+{
+	switch (type)
+	{
+		case CALC_XOR:
+			return a ^ b;
+		case CALC_OR:
+			return a | b;
+		case CALC_AND:
+			return a & b;
+		case CALC_ADD:
+			return a + b;
+		case CALC_SUB:
+			return a - b;
+		default:
+			printf("Unknown CALC_TYPE\n");
+			exit(1);
+	}
+}
+
+
+struct calc_data process_operation(struct print_data pdata, enum calc_type type, 
+	int d, int w)
+{
+	uint16_t ldata, rdata, result;
+	// MOD_REG == MOD_REG
+	if (pdata.data_left.type == pdata.data_right.type) 	
+	{
+		ldata = get_registers(g_registers, pdata.data_left._reg, w);
+		rdata = get_registers(g_registers, pdata.data_right._reg, w);
+		result = compute_calc(type, ldata, rdata);
+		set_registers(g_registers, pdata.data_left._reg, w, result);
+	}
+	else // MOD_EA
+	{
+		if (d == 0) // mem, reg
+		{
+			rdata = get_registers(g_registers, 
+				pdata.data_right._reg, w);
+			ldata = get_memory(g_memory, 
+				pdata.data_left._ea, w);
+			result = compute_calc(type, ldata, rdata);
+			set_memory(g_memory, pdata.data_left._ea, w, result);
+		}
+		else // reg, mem
+		{
+			ldata = get_registers(g_registers, 
+				pdata.data_left._reg, w);
+			rdata = get_memory(g_memory, 
+				pdata.data_right._ea, w);
+			result = compute_calc(type, ldata, rdata);
+			set_registers(g_registers, pdata.data_left._reg, w,
+				result);
+		}
+	}
+	struct calc_data res_data;
+	res_data.left = ldata;
+	res_data.right = rdata;
+	res_data.result = result;
+	return res_data;
 }

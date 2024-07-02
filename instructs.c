@@ -361,16 +361,20 @@ int op_cond_jmp(uint8_t op)
 			can_jump = g_flags.ZF;
 			break;
 		case OP_JL:
-			op_name = "jl";
+			op_name = "+jl";
+			can_jump = g_flags.SF != g_flags.OF;
 			break;
 		case OP_JLE:
-			op_name = "jle";
+			op_name = "+jle";
+			can_jump = g_flags.ZF || (g_flags.SF != g_flags.OF);
 			break;
 		case OP_JB:
-			op_name = "jb";
+			op_name = "+jb";
+			can_jump = g_flags.CF;
 			break;
 		case OP_JBE:
-			op_name = "jbe";
+			op_name = "+jbe";
+			can_jump = g_flags.CF || g_flags.ZF;
 			break;
 		case OP_JP:
 			op_name = "jl";
@@ -382,20 +386,24 @@ int op_cond_jmp(uint8_t op)
 			op_name = "js";
 			break;
 		case OP_JNE:
-			op_name = "jne";
+			op_name = "+jne";
+			can_jump = !g_flags.ZF;
 			break;
 		case OP_JNL:
 			op_name = "+jnl";
 			can_jump = g_flags.SF == g_flags.OF;
 			break;
 		case OP_JNLE:
-			op_name = "jnle";
+			op_name = "+jnle";
+			can_jump = !g_flags.ZF && (g_flags.OF == g_flags.SF);
 			break;
 		case OP_JNB:
-			op_name = "jnb";
+			op_name = "+jnb";
+			can_jump = !g_flags.CF;
 			break;
 		case OP_JNBE:
-			op_name = "jnbe";
+			op_name = "+jnbe";
+			can_jump = !g_flags.CF && !g_flags.ZF;
 			break;
 		case OP_JNP:
 			op_name = "jnp";
@@ -464,6 +472,10 @@ int op_ret(uint8_t op)
 		pretty_print(PC + 1, 0, "+ret\n");
 		PC += 1;
 		PC = pop_stack(BIT_16);
+		//²// i don't know... so I hardcoded that
+		//²if (PC == 0)
+		//²	PC += 1;
+
 	}
 	else if (op == OP_RET_1)
 	{
@@ -483,7 +495,9 @@ int op_cbw(uint8_t op)
 {
 	if (op == OP_CBW)
 	{
-		pretty_print(PC + 1, 0, "cbw\n");
+		pretty_print(PC + 1, 0, "+cbw\n");
+		// sign extend
+		g_registers[AX] = (g_registers[AX] & 0x0080 ? 0xFF00 : 0x0000) | (g_registers[AX] & 0X00FF);
 		PC += 1;
 	}
 	else

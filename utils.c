@@ -1,7 +1,7 @@
 #include "utils.h"
 
 uint16_t g_registers[8] = {0, 0, 0, 0,
-						  STACK_CAPACITY, 0, 0, 0};
+						  0xffda, 0, 0, 0};
 int8_t *g_memory;
 int8_t *g_stack;
 struct flags g_flags = {0,};
@@ -131,14 +131,31 @@ set_registers(uint16_t registers[8], uint8_t reg, uint8_t w, uint16_t value)
 	}
 	else
 	{
-		registers[reg] = (registers[reg] & 0xFF00) | (value & 0x00FF);
+		int higher_byte = (reg & 0b100) == 0b100;
+		reg &= 0b011; // clear flag
+		if (higher_byte) // higher byte
+			registers[reg] = (registers[reg] & 0x00FF) | (value & 0xFF00);
+		else // lower byte
+			registers[reg] = (registers[reg] & 0xFF00) | (value & 0x00FF);
+
 	}
 }
 
 int16_t 
 get_registers(uint16_t registers[8], uint8_t reg, uint8_t w)
 {
-	return w ? registers[reg] : registers[reg] & 0x00FF;
+	if (w)
+		return registers[reg];
+	else
+	{
+		int higher_byte = (reg & 0b100) == 0b100;
+		reg &= 0b011; // clear flag
+		if (higher_byte) // higher byte
+			return (registers[reg] & 0xFF00) >> 8;
+		else // lower byte
+			return (registers[reg] & 0x00FF);
+	}
+
 }
 
 void
@@ -197,21 +214,21 @@ void pop_reg_stack(uint8_t reg, uint8_t w)
 	set_registers(g_registers, reg,  w, data);
 }
 
-void push_mem_stack(uint8_t ea, uint8_t w)
+void push_mem_stack(uint16_t ea, uint8_t w)
 {
 	uint16_t data = get_memory(g_memory, ea, w);
 	push_stack(data, w);
 }
 
-void pop_mem_stack(uint8_t ea, uint8_t w)
+void pop_mem_stack(uint16_t ea, uint8_t w)
 {
 	uint16_t data = pop_stack(w);
 	set_memory(g_memory, ea, w, data);
 }
 
-void update_sf(struct flags *flags, int16_t result)
+void update_sf(struct flags *flags, int16_t result, uint8_t w)
 {
-	flags->SF = result < 0;	
+	flags->SF = w ? IS_NEG16(result) : IS_NEG8(result);	
 }
 
 void update_pf(struct flags *flags, int16_t result)

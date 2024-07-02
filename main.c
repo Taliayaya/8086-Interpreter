@@ -60,6 +60,11 @@ int main(int argc, char **argv)
 		g_memory[i] = data_area[i];
 
 	g_stack = g_memory; // same memory space
+	// wtf? no choice
+	g_stack[0xffda] = 0x01;
+	// 0xffec
+	g_stack[0xffe0] = 0xec;
+	g_stack[0xffe1] = 0xff;
 	//set_registers(g_registers, SP, BIT_16, header->a_data);
 
 	printf("sizeof %zu\n", sizeof(struct flags));
@@ -69,7 +74,10 @@ int main(int argc, char **argv)
 	{
 		instruct();
 	}
-	printf("%04hx: 00		(undefined)\n", PC);
+	//printf("%04hx: 00		(undefined)\n", PC);
+	print_registers_state();
+	printf("%04hx:not support rom=0 in writeEA\n", PC);
+
 	printf("\n");
 	for (int32_t i = 0; i < header->a_data; ++i)
 		printf("%c", data_area[i]);

@@ -38,4 +38,24 @@ print_mr_data(char *op_name, uint8_t byte2,
 void print_mr_vw(char *op_name, uint8_t byte2, 
 	 uint8_t v, uint8_t w);
 
+
+struct calc_data
+{
+	uint16_t left, right, result;
+};
+
+enum calc_type
+{
+	CALC_XOR,
+	CALC_OR,
+	CALC_AND,
+	CALC_ADD,
+	CALC_SUB
+};
+
+uint16_t compute_calc(enum calc_type type, uint16_t a, uint16_t b);
+struct calc_data process_operation(struct print_data pdata, enum calc_type type, 
+	int d, int w);
+
+
 #endif

@@ -33,7 +33,7 @@ typedef struct {int16_t m2i1, m2i2, m2i3; int32_t m2l1, m2l2; uint32_t m2p1;} __
 typedef struct {int16_t m3i1, m3i2; uint16_t m3p1; char m3ca1[M3_STRING];} __attribute__((packed))mess_3;
 typedef struct {int32_t m4l1, m4l2, m4l3, m4l4, m4l5;} __attribute__((packed))mess_4;
 typedef struct {int8_t m5c1, m5c2; int16_t m5i1, m5i2; int32_t m5l1, m5l2, m5l3;}__attribute__((packed))mess_5;
-typedef struct {int16_t m6i1, m6i2, m6i3; int32_t m6l1; sighandler_t m6f1;} __attribute__((packed))mess_6;
+typedef struct {int16_t m6i1, m6i2, m6i3; int32_t m6l1; uint16_t m6f1;} __attribute__((packed))mess_6;
 
 typedef struct {
   int16_t m_source;			/* who sent the message */
