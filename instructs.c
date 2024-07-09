@@ -276,17 +276,14 @@ int op_mov_2(uint8_t byte1)
 
 		uint16_t data = g_text_segment[PC + 1];
 		if (w == 1)
-		{
 			data |= (g_text_segment[PC + 2] << 8);
-			PC += 3;
-		}
-		else
-			PC += 2;
+
 		set_registers(g_registers, reg, w, data);
 
 		char instr[32];
 		sprintf(instr, "+mov %s, %04hx\n", get_reg(reg, w), data);
 		pretty_print(PC + 1, 2, instr);
+		PC += 2 + w;
 		return 1;
 	}
 	else
