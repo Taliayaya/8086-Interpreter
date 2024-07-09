@@ -641,7 +641,18 @@ int op_call_1(uint8_t op, uint8_t flag,
 	if (op == OP_W_CALL_1 && flag == OP_W_CALL_1_FLAG)
 	{
 		PC += 2;
-		print_mr("call", byte2, 1);
+		struct operation_data data;
+		data = print_mr("+call", byte2, 1);
+
+		// push next instruction
+		push_stack(PC, BIT_16);
+
+		// go to call
+		if (data.type == MOD_REG)
+			PC = get_registers(g_registers, data._reg, BIT_16);
+		else
+			PC = get_memory(g_memory, data._ea, BIT_16);
+			
 		return 1;
 	}
 	else

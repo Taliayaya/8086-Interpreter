@@ -178,6 +178,23 @@ get_memory(int8_t *memory, uint16_t ea, uint8_t w)
 
 }
 
+uint16_t get_data(struct operation_data data, uint8_t w)
+{
+	if (data.type == MOD_REG)
+		return get_registers(g_registers, data._reg, w);
+	else
+		return get_memory(g_memory, data._ea, w);
+}
+
+void set_data(struct operation_data data, uint8_t w, uint16_t value)
+{
+	if (data.type == MOD_REG)
+		set_registers(g_registers, data._reg, w, value);
+	else
+		set_memory(g_memory, data._ea, w, value);
+
+}
+
 void push_stack(uint16_t data, uint8_t w)
 {
 	// we decrement sp then push

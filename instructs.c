@@ -221,8 +221,12 @@ int op_lahf(uint8_t op)
 {
 	if (op == OP_LAHF)
 	{
-		pretty_print(PC + 1, 0, "lahf\n");
+		pretty_print(PC + 1, 0, "+lahf\n");
 		PC += 1;
+		uint8_t ah = (g_flags.SF << 7) | (g_flags.ZF << 6) | (g_flags.CF);
+		set_registers(g_registers, AH, BIT_8, ah);
+		exit(1);
+
 		return 1;
 	}
 	else
@@ -421,7 +425,8 @@ int op_cond_jmp(uint8_t op)
 			op_name = "loopnz";
 			break;
 		case OP_JCXZ:
-			op_name = "jcxz";
+			op_name = "+jcxz";
+			can_jump = g_registers[CX] == 0;
 			break;
 
 		default:
@@ -583,6 +588,8 @@ int op_ssb_2(uint8_t byte1)
 	return 1;
 }
 
+
+
 int op_logic(uint8_t byte1)
 {
 	if (IS_OP(byte1, VW_MASK, OP_VW_LOGIC))
@@ -593,32 +600,46 @@ int op_logic(uint8_t byte1)
 		w = W(byte1);
 		PC += 1;
 
+		uint8_t count = v ? get_registers(g_registers, CL, BIT_8) : 1;
+
+		struct operation_data data;
+
+		uint16_t val, res;
+
 		switch (FLAG(byte2))
 		{
 			case OP_SHL_FLAG:
-				print_mr_vw("shl", byte2, v, w);
+				data = print_mr_vw("+shl", byte2, v, w);
+				val = get_data(data, w);
+				res = val << count;
+				g_flags.CF = (val & ((w ? 0x8000 : 0x80) >> (count - 1))) == 1;
+				g_flags.OF = (w ? IS_NEG16(res) : IS_NEG8(res)) != g_flags.CF;
 				break;
 			case OP_SHR_FLAG:
-				print_mr_vw("shr", byte2, v, w);
+				data = print_mr_vw("shr", byte2, v, w);
 				break;
 			case OP_SAR_FLAG:
-				print_mr_vw("sar", byte2, v, w);
+				data = print_mr_vw("sar", byte2, v, w);
 				break;
 			case OP_ROL_FLAG:
-				print_mr_vw("rol", byte2, v, w);
+				data = print_mr_vw("rol", byte2, v, w);
 				break;
 			case OP_ROR_FLAG:
-				print_mr_vw("ror", byte2, v, w);
+				data = print_mr_vw("ror", byte2, v, w);
 				break;
 			case OP_RCL_FLAG:
-				print_mr_vw("rcl", byte2, v, w);
+				data = print_mr_vw("rcl", byte2, v, w);
 				break;
 			case OP_RCR_FLAG:
-				print_mr_vw("rcr", byte2, v, w);
+				data = print_mr_vw("rcr", byte2, v, w);
 				break;
 			default:
 				return 0;
 		}
+
+		set_data(data, w, res);
+		g_flags.ZF = val == 0;
+		g_flags.SF = w ? IS_NEG16(val) : IS_NEG8(val);
 	}
 	else
 		return 0;

@@ -35,7 +35,9 @@ print_mrr(char *op_name, uint8_t byte2,
 struct print_data
 print_mr_data(char *op_name, uint8_t byte2,
 	uint8_t w);
-void print_mr_vw(char *op_name, uint8_t byte2, 
+
+struct operation_data
+print_mr_vw(char *op_name, uint8_t byte2, 
 	 uint8_t v, uint8_t w);
 
 

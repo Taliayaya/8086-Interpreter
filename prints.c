@@ -129,7 +129,8 @@ print_mr(char *op_name, uint8_t byte2,
 
 }
 
-void print_mr_vw(char *op_name, uint8_t byte2, 
+struct operation_data
+print_mr_vw(char *op_name, uint8_t byte2, 
 	 uint8_t v, uint8_t w)
 {
 	uint8_t mod, r_m;
@@ -143,10 +144,11 @@ void print_mr_vw(char *op_name, uint8_t byte2,
 	char instr[32];
 	sprintf(instr, "%s %s, %s\n", op_name, dest, v ? "cl" : "1");
 
-	pretty_print(PC - 2, data.byte_read + 1, instr);
-	PC += data.byte_read;
+	pretty_print(PC - 2 - data.byte_read, data.byte_read + 1, instr);
+	PC += data.byte_read + 1;
 		
 	free(dest);
+	return data.memory;
 
 }
 

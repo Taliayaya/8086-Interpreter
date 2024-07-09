@@ -196,6 +196,12 @@ set_memory(int8_t *memory, uint16_t ea, uint8_t w, int16_t data);
 int16_t
 get_memory(int8_t *memory, uint16_t ea, uint8_t w);
 
+uint16_t 
+get_data(struct operation_data data, uint8_t w);
+
+void 
+set_data(struct operation_data data, uint8_t w, uint16_t value);
+
 void push_stack(uint16_t data, uint8_t w);
 uint16_t pop_stack(uint8_t w);
 
