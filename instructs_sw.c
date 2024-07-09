@@ -47,7 +47,7 @@ int op_add_1(uint8_t op, uint8_t flag,
 			// should take w into account?
 			g_flags.OF = __builtin_add_overflow(reg_data, immediate, &result); // signed carry
 			g_flags.AF = ((reg_data & 0x0F) < (immediate & 0x0F)); // nibble overflow
-			g_flags.CF = (uint16_t)reg_data < (uint16_t)immediate;
+			g_flags.CF = (uint16_t)result < (uint16_t)reg_data || (uint16_t)result < (uint16_t)immediate;
 
 
 			set_registers(g_registers, rdata.data_left._reg, w, result);
@@ -64,9 +64,7 @@ int op_add_1(uint8_t op, uint8_t flag,
 			g_flags.SF = result < 0; // negative
 			g_flags.ZF = result == 0; // zero
 			g_flags.AF = ((mem_data & 0x0F) < (rdata.data_right._imm16 & 0x0F)); // nibble overflow
-			//g_flags.PF // TODO
-			g_flags.CF = mem_data < rdata.data_right._imm16;
-
+			g_flags.CF = (uint16_t)result < (uint16_t)mem_data || (uint16_t)result < (uint16_t)immediate;
 		}
 		update_zf(&g_flags, result);
 		update_pf(&g_flags, result);

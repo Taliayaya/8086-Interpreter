@@ -117,7 +117,7 @@ print_mr(char *op_name, uint8_t byte2,
 
 	char instr[32];
 	sprintf(instr, "%s %s", op_name, dest);
-	pretty_print(PC - 1, data.byte_read + 1, instr);
+	pretty_print(PC - 2, data.byte_read + 1, instr);
 
 	if (data.memory.type == MOD_EA)
 		print_memory_content(data.memory, w);

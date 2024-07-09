@@ -75,8 +75,14 @@ int op_xchg_1(uint8_t op, uint8_t reg)
 	if (op == OP_XCHG_1)
 	{
 		char instr[32];
-		sprintf(instr, "xchg %s, ax\n", get_reg(reg, DEFAULT_W));
+		sprintf(instr, "+xchg %s, ax\n", get_reg(reg, DEFAULT_W));
 		pretty_print(PC + 1, 0, instr);
+
+		uint16_t ldata, rdata;
+		ldata = get_registers(g_registers, reg, BIT_16);
+		rdata = get_registers(g_registers, AX, BIT_16);
+		set_registers(g_registers, reg, BIT_16, rdata);
+		set_registers(g_registers, AX,  BIT_16, ldata);
 		return 1;
 	}
 	else

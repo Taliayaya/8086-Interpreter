@@ -50,7 +50,8 @@ enum calc_type
 	CALC_OR,
 	CALC_AND,
 	CALC_ADD,
-	CALC_SUB
+	CALC_SUB,
+	CALC_XCHG
 };
 
 uint16_t compute_calc(enum calc_type type, uint16_t a, uint16_t b);

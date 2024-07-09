@@ -111,7 +111,7 @@ get_mod(
 				sign, adisp16);
 
 			mem_data.type = MOD_EA;
-			mem_data._ea = get_disp(r_m, adisp16);
+			mem_data._ea = get_disp(r_m, disp);
 			return (struct mod_data){.byte_read=2, .memory=mem_data};
 
 		case 0b11:

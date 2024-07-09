@@ -481,10 +481,12 @@ int op_ret(uint8_t op)
 	{
 		char instr[32];
 		uint16_t data = g_text_segment[PC + 1] + (g_text_segment[PC + 2] << 8);
-		sprintf(instr, "ret %04hx\n", data);
+		sprintf(instr, "+ret %04hx\n", data);
 		pretty_print(PC + 1, 2, instr);
 
 		PC += 3;
+		PC = pop_stack(BIT_16);
+		g_registers[SP] += data;// * 2;
 	}
 	else
 		return 0;
@@ -509,8 +511,14 @@ int op_cwd(uint8_t op)
 {
 	if (op == OP_CWD)
 	{
-		pretty_print(PC + 1, 0, "cwd\n");
+		pretty_print(PC + 1, 0, "+cwd\n");
 		PC += 1;
+		uint16_t reg = get_registers(g_registers, AX, BIT_16);
+		// sign extend AX to DX
+		if (IS_NEG16(reg))
+			set_registers(g_registers, DX, BIT_16, 0xFFFF);
+		else
+			set_registers(g_registers, DX, BIT_16, 0x0000);
 	}
 	else
 		return 0;
@@ -522,20 +530,30 @@ int op_sub_2(uint8_t byte1)
 	if (IS_OP(byte1, W_MASK, OP_W_SUB_2))
 	{
 		uint8_t w;
-		uint16_t data;
+		uint16_t rdata;
 		w = W(byte1);
 		char instr[32];
 
-		data = g_text_segment[PC + 1];
+		rdata = g_text_segment[PC + 1];
 		if (w == 1)
 		{
-			data |= g_text_segment[PC + 2] << 8;
+			rdata |= g_text_segment[PC + 2] << 8;
 			PC += 3;
 		}
 		else
 			PC += 2;
-		sprintf(instr, "sub %s, %04hx\n", w ? "ax" : "al", data);
+		sprintf(instr, "+sub %s, %04hx\n", w ? "ax" : "al", rdata);
 		pretty_print(PC + 1, 1 + w, instr);
+
+		uint16_t ldata = get_registers(g_registers, AX, w);
+		uint16_t result = ldata - rdata;
+		set_registers(g_registers, AX, w, result);
+
+		g_flags.OF = w ? ((IS_NEG16(ldata) && !IS_NEG16(rdata) && !IS_NEG16(result)) || (!IS_NEG16(ldata) && IS_NEG16(rdata) && IS_NEG16(result))) : ((IS_NEG8(ldata) && !IS_NEG8(rdata) && !IS_NEG8(result)) || (!IS_NEG8(ldata) && IS_NEG8(rdata) && IS_NEG8(result)));
+		g_flags.SF = w ? IS_NEG16(result) : IS_NEG8(result); // negative
+		g_flags.ZF = result == 0; // zero
+		g_flags.CF = ldata < rdata;
+
 	}
 	else
 		return 0;

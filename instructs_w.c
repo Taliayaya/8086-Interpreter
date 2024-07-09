@@ -207,7 +207,26 @@ int op_dec_0(uint8_t op, uint8_t flag,
 	if (op == OP_W_DEC_0 && flag == OP_W_DEC_0_FLAG)
 	{
 		PC += 2;
-		print_mr("dec", byte2, w);
+		struct operation_data data;
+		data = print_mr("+dec", byte2, w);
+
+		uint16_t val;
+		if (data.type == MOD_REG)
+		{
+			val = get_registers(g_registers, data._reg, w);
+			set_registers(g_registers, data._reg, w, val - 1);
+		}
+		else // MOD_EA
+		{
+			val = get_memory(g_memory, data._ea, w);
+			set_memory(g_memory, data._ea, w, val - 1);
+		}
+
+		g_flags.ZF = (val - 1) == 0;
+		g_flags.OF = val && ((val - 1) & 0x8000) != (val & 0x8000); // 0 - 1 = -1 is a valid operation
+		g_flags.OF = 0;
+		g_flags.SF = ((val - 1) & 0x8000) == 0x8000;
+
 		return 1;
 	}
 	else
@@ -278,7 +297,40 @@ int op_div(uint8_t op, uint8_t flag,
 	if (op == OP_W_DIV && flag == OP_W_DIV_FLAG)
 	{
 		PC += 2;
-		print_mr("div", byte2, w);
+		struct operation_data data;
+		data = print_mr("+div", byte2, w);
+		uint16_t up_nb, dwn_nb;
+		up_nb = get_registers(g_registers, AX, BIT_16);
+		if (data.type == MOD_REG)
+			dwn_nb = get_registers(g_registers, data._reg, w);
+		else
+			dwn_nb = get_memory(g_memory, data._ea, w);
+		if (dwn_nb == 0)
+		{
+			printf("div is 0, exit\n");
+			exit(0);
+		}
+
+		if (w)
+		{
+			uint32_t up_nb = (g_registers[DX] << 16) | g_registers[AX];
+			uint16_t q, r;
+			q = up_nb / dwn_nb;
+			r = up_nb % dwn_nb;
+			g_registers[AX] = q;
+			g_registers[DX] = r;
+		}
+		else
+		{
+			uint8_t q, r;
+			q = up_nb / dwn_nb;
+			r = up_nb % dwn_nb;
+			// set quotient in lower byte of AL
+			set_registers(g_registers, AL, BIT_8, q);
+			// set remainder in higher byte of AH
+			set_registers(g_registers, AH, BIT_8, r);
+
+		}
 		return 1;
 	}
 	else
@@ -350,7 +402,26 @@ int op_xchg_0(
 	if (op == OP_XCHG_0)
 	{
 		PC += 2;
-		print_mrr("xchg", byte2, 0, w);
+		struct print_data pdata;
+		pdata = print_mrr("+xchg", byte2, 0, w);
+		uint16_t ldata, rdata;
+		if (pdata.data_left.type == pdata.data_right.type) 	
+		{
+			ldata = get_registers(g_registers, pdata.data_left._reg, w);
+			rdata = get_registers(g_registers, pdata.data_right._reg, w);
+			set_registers(g_registers, pdata.data_left._reg, w, rdata);
+			set_registers(g_registers, pdata.data_right._reg, w, ldata);
+		}
+		else // MOD_EA
+		{
+			rdata = get_registers(g_registers, 
+				pdata.data_right._reg, w);
+			ldata = get_memory(g_memory, 
+				pdata.data_left._ea, w);
+			set_memory(g_memory, pdata.data_left._ea, w, rdata);
+			set_registers(g_registers, pdata.data_right._reg, w, ldata);
+
+		}
 		return 1;
 	}
 	else

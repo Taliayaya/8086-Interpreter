@@ -50,6 +50,7 @@ struct	exec {			/* a.out header */
 #define D(x)     ((x & 0b00000010) >> 1)
 #define W(x) 	  (x & 0b00000001)
 
+// w = 1
 #define AX 0b000
 #define CX 0b001
 #define DX 0b010
@@ -59,12 +60,25 @@ struct	exec {			/* a.out header */
 #define SI 0b110
 #define DI 0b111
 
+// w = 0 - lower byte
+#define AL AX
+#define BL BX
+#define CL CX
+#define DL DX
+// w = 0 - higher byte
+#define AH SP
+#define BH BP
+#define CH SI
+#define DH DI
+
 #define GET_REGISTER(g_regs, reg, w) (w ? g_regs[reg] : g_regs[reg] & 0x00FF)
 #define BIT_16 1
 #define BIT_8  0
 
 #define IS_NEG16(x) ((x & 0x8000) == 0x8000)
 #define IS_NEG8(x)	((x & 0x80)	  == 0x80)
+
+#define SIGN_EXTEND16(x) (IS_NEG8(x) ? OxFF00 | x : x)
 
 #define STACK_CAPACITY 0xFFFF
 

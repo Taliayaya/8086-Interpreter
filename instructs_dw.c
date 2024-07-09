@@ -195,7 +195,18 @@ int op_and_0(uint8_t op,
 	if (op == OP_DW_AND_0)
 	{
 		PC += 2;
-		print_mrr("and", byte2, d, w);
+		struct print_data pdata;
+		pdata = print_mrr("+and", byte2, d, w);
+
+		struct calc_data data;
+		data = process_operation(pdata, CALC_AND, d, w);
+		g_flags.SF = w ? IS_NEG16(data.result) : IS_NEG8(data.result);
+		g_flags.ZF = data.result == 0;
+		g_flags.OF = 0;
+		g_flags.CF = 0;
+
+
+		
 		return 1;
 	}
 	else
