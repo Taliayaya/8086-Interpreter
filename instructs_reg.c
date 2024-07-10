@@ -41,7 +41,7 @@ int instructs_reg_only()
 void print_reg(char *op_name, uint8_t reg, uint8_t w)
 {
 	char instr[32];
-	sprintf(instr, "%s %s\n", op_name, get_reg(reg, w));
+	sprintf(instr, "%s %s", op_name, get_reg(reg, w));
 	pretty_print(PC + 1, 0, instr);
 }
 

@@ -21,6 +21,9 @@ void print_registers_state(void)
 
 void print_memory_content(struct operation_data data, uint8_t w)
 {
+	if (PROGRAM_MODE != INTERPRET_DEBUG)
+		return;
+
 	printf(" ;[%04hx]", data._ea);
 	if (w)
 	{
@@ -38,7 +41,8 @@ void print_memory_content(struct operation_data data, uint8_t w)
 
 void pretty_print(uint16_t byte_start, size_t count, char *instr)
 {
-
+	if (PROGRAM_MODE == INTERPRET)
+		return;
  	char concatenated[2 * count + 1]; 
     concatenated[0] = '\0';
 
@@ -98,7 +102,6 @@ print_mrr(char *op_name, uint8_t byte2,
 
 	if (data.memory.type == MOD_EA)
 		print_memory_content(data.memory, w);
-	printf("\n");
 
 	return rdata;
 }
@@ -121,7 +124,6 @@ print_mr(char *op_name, uint8_t byte2,
 
 	if (data.memory.type == MOD_EA)
 		print_memory_content(data.memory, w);
-	printf("\n");
 		
 	PC += data.byte_read;
 	free(dest);
@@ -142,7 +144,7 @@ print_mr_vw(char *op_name, uint8_t byte2,
 	struct mod_data data = get_mod(mod, r_m, w, dest);
 
 	char instr[32];
-	sprintf(instr, "%s %s, %s\n", op_name, dest, v ? "cl" : "1");
+	sprintf(instr, "%s %s, %s", op_name, dest, v ? "cl" : "1");
 
 	pretty_print(PC - 2 - data.byte_read, data.byte_read + 1, instr);
 	PC += data.byte_read + 1;
@@ -209,7 +211,6 @@ print_mr_sw(char *op_name, uint8_t byte2,
 	pretty_print(PC - byte_read, byte_read, instr);
 	if (mdata.memory.type == MOD_EA)
 		print_memory_content(mdata.memory, w);
-	printf("\n");
 	free(dest);
 	return return_data;
 
@@ -263,7 +264,6 @@ print_mr_data(char *op_name, uint8_t byte2,
 	if (mdata.memory.type == MOD_EA)
 		print_memory_content(rdata.data_left, w);
 
-	printf("\n");
 
 	free(dest);
 	return rdata;

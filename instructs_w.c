@@ -97,7 +97,7 @@ int op_mov_3(uint8_t op, uint8_t flag,
 	{
 		uint16_t addr = byte2 | (g_text_segment[PC + 2] << 8);
 		char instr[32];
-		sprintf(instr, "mov %s, [%04hx]\n", w ? "ax" : "al", addr);
+		sprintf(instr, "mov %s, [%04hx]", w ? "ax" : "al", addr);
 		pretty_print(PC + 1, 2, instr);
 
 		PC += 3;
@@ -114,7 +114,7 @@ int op_mov_4(uint8_t op, uint8_t flag,
 	{
 		uint16_t addr = byte2 | (g_text_segment[PC + 2] << 8);
 		char instr[32];
-		sprintf(instr, "mov [%04hx], %s\n", addr, w ? "ax" : "al");
+		sprintf(instr, "mov [%04hx], %s", addr, w ? "ax" : "al");
 		pretty_print(PC + 1, 2, instr);
 
 		PC += 3;
@@ -132,12 +132,12 @@ int op_add_2(uint8_t op, uint8_t flag,
 		char instr[32];
 		if (w == 0)
 		{
-			sprintf(instr, "add al, %hhx\n", byte2);
+			sprintf(instr, "add al, %hhx", byte2);
 		}
 		else
 		{
 			uint16_t data = byte2 | (g_text_segment[PC + 2] << 8);
-			sprintf(instr, "add ax, %04hx\n", data);
+			sprintf(instr, "add ax, %04hx", data);
 		}
 		pretty_print(PC + 1, 1 + w, instr);
 		PC += 2 + w;
@@ -155,12 +155,12 @@ int op_adc_2(uint8_t op, uint8_t flag,
 		char instr[32];
 		if (w == 0)
 		{
-			sprintf(instr, "adc al, %hhx\n", byte2);
+			sprintf(instr, "adc al, %hhx", byte2);
 		}
 		else
 		{
 			uint16_t data = byte2 | (g_text_segment[PC + 2] << 8);
-			sprintf(instr, "adc ax, %04hx\n", data);
+			sprintf(instr, "adc ax, %04hx", data);
 		}
 		pretty_print(PC + 1, 1 + w, instr);
 		PC += 2 + w;
@@ -299,6 +299,9 @@ int op_div(uint8_t op, uint8_t flag,
 		PC += 2;
 		struct operation_data data;
 		data = print_mr("+div", byte2, w);
+		if (PROGRAM_MODE == DISSASSEMBLE)
+			return -1;
+
 		uint16_t up_nb, dwn_nb;
 		up_nb = get_registers(g_registers, AX, BIT_16);
 		if (data.type == MOD_REG)
@@ -565,11 +568,11 @@ int op_cmp_2(uint8_t op, uint8_t flag,
 		if (w == 1)
 		{
 			data = byte2 | (g_text_segment[PC + 2] << 8);
-			sprintf(instr, "+cmp ax, %04hx\n", data);
+			sprintf(instr, "+cmp ax, %04hx", data);
 		}
 		else
 		{
-			sprintf(instr, "+cmp al, %02hhx\n", byte2);
+			sprintf(instr, "+cmp al, %02hhx", byte2);
 		}
 
 		ldata = get_registers(g_registers, AX, w);
@@ -644,6 +647,9 @@ int op_call_1(uint8_t op, uint8_t flag,
 		struct operation_data data;
 		data = print_mr("+call", byte2, 1);
 
+		if (PROGRAM_MODE == DISSASSEMBLE)
+			return 1;
+
 		// push next instruction
 		push_stack(PC, BIT_16);
 
@@ -667,6 +673,9 @@ int op_jmp_2(uint8_t op, uint8_t flag,
 		PC += 2;
 		struct operation_data data;
 		data = print_mr("+jmp", byte2, BIT_16);
+		if (PROGRAM_MODE == DISSASSEMBLE)
+			return 1;
+
 		if (data.type == MOD_REG)
 			PC = get_registers(g_registers, data._reg, BIT_16);
 		else

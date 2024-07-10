@@ -32,7 +32,8 @@ void syscall_hat(uint8_t *memory, uint16_t registers[8])
 void sys_exit_1(uint8_t *memory, uint16_t registers[8], message *m)
 {
 	int status = m->m1_i1;
-	printf("<exit(%i)>\n", status);
+	if (PROGRAM_MODE == INTERPRET_DEBUG)
+		printf("\n<exit(%i)>\n", status);
 	exit(status);
 }
 
@@ -43,11 +44,15 @@ void sys_write_4(uint8_t *memory, uint16_t registers[8], message *m)
 	nbytes = m->m1_i2;
 	buffer = m->m1_p1;
 
-	printf("<write(%i, 0x%04hx, %i)",
-		fd, buffer, nbytes);
+	if (PROGRAM_MODE == INTERPRET_DEBUG)
+		printf("\n<write(%i, 0x%04hx, %i)",
+			fd, buffer, nbytes);
+
 	for (int i = 0; i < nbytes; ++i)
 		printf("%c", g_memory[buffer + i]);
-	printf(" => %i>\n", nbytes);
+
+	if (PROGRAM_MODE == INTERPRET_DEBUG)
+		printf(" => %i>", nbytes);
 
 	// AX cleared
 	registers[AX] = 0;
@@ -61,7 +66,8 @@ void sys_brk_17(uint8_t *memory, uint16_t registers[8], message *m)
 	addr = m->m1_p1;
 	int8_t ret = 0;
 
-	printf("<brk(0x%04hx) => %hhx>\n", addr, ret);
+	if (PROGRAM_MODE == INTERPRET_DEBUG)
+		printf("\n<brk(0x%04hx) => %hhx>", addr, ret);
 
 	// AX cleared
 	registers[AX] = 0;
@@ -74,7 +80,9 @@ void sys_ioctl_54(uint8_t *memory, uint16_t registers[8], message *m)
 	uint16_t fd = m->TTY_LINE;
 	uint16_t request = m->TTY_REQUEST;
 	uint16_t data = m->ADDRESS;
-	printf("<ioctl(%hx, 0x%hx, 0x%hx)>\n", fd, request, data);
+
+	if (PROGRAM_MODE == INTERPRET_DEBUG)
+		printf("\n<ioctl(%hx, 0x%hx, 0x%hx)>", fd, request, data);
 	//ioctl(fd, request, g_memory + data);
     //return(_syscall(FS, IOCTL, &m));
 

@@ -84,7 +84,7 @@ int op_push_2(uint8_t byte1)
 	{
 		uint8_t reg = byte1 & 0b00011000;
 		char instr[32];
-		sprintf(instr, "push %s\n", get_segreg(reg));
+		sprintf(instr, "push %s", get_segreg(reg));
 		pretty_print(PC + 1, 1, instr);
 		PC += 1;
 		return 1;
@@ -100,7 +100,7 @@ int op_pop_2(uint8_t byte1)
 		char instr[32];
 		uint8_t reg = byte1 & 0b00011000;
 		PC += 1;
-		sprintf(instr, "pop %s\n", get_segreg(reg));
+		sprintf(instr, "pop %s", get_segreg(reg));
 		pretty_print(PC + 1, 1, instr);
 
 		return 1;
@@ -118,13 +118,13 @@ int op_in(uint8_t byte1)
 	if (IS_OP(byte1, OP_IN_0_MASK, OP_IN_0))
 	{
 		uint8_t port = g_text_segment[PC + 1];
-		sprintf(instr, "in %s, %02hhx\n", w ? "ax" : "al", port);
+		sprintf(instr, "in %s, %02hhx", w ? "ax" : "al", port);
 		pretty_print(PC + 1, 1, instr);
 		PC += 2;
 	}
 	else if (IS_OP(byte1, OP_IN_1_MASK, OP_IN_1))
 	{
-		sprintf(instr, "in %s, dx\n", w ? "ax" : "al");
+		sprintf(instr, "in %s, dx", w ? "ax" : "al");
 		pretty_print(PC + 1, 0, instr);
 		PC += 1;
 	}
@@ -140,14 +140,14 @@ int op_out(uint8_t byte1)
 	if (IS_OP(byte1, OP_OUT_0_MASK, OP_OUT_0))
 	{
 		uint8_t port = g_text_segment[PC + 1];
-		sprintf(instr, "out %s, %02hhx\n", w ? "ax" : "al", port);
+		sprintf(instr, "out %s, %02hhx", w ? "ax" : "al", port);
 		pretty_print(PC + 1, 1, instr);
 
 		PC += 2;
 	}
 	else if (IS_OP(byte1, OP_OUT_1_MASK, OP_OUT_1))
 	{
-		sprintf(instr, "out %s, dx\n", w ? "ax" : "al");
+		sprintf(instr, "out %s, dx", w ? "ax" : "al");
 		pretty_print(PC + 1, 0, instr);
 		PC += 1;
 	}
@@ -162,7 +162,7 @@ int op_xlat(uint8_t op)
 {
 	if (op == OP_XLAT)
 	{
-		pretty_print(PC + 1, 0, "xlat\n");
+		pretty_print(PC + 1, 0, "xlat");
 
 		PC += 1;
 		return 1;
@@ -221,7 +221,7 @@ int op_lahf(uint8_t op)
 {
 	if (op == OP_LAHF)
 	{
-		pretty_print(PC + 1, 0, "+lahf\n");
+		pretty_print(PC + 1, 0, "+lahf");
 		PC += 1;
 		uint8_t ah = (g_flags.SF << 7) | (g_flags.ZF << 6) | (g_flags.CF);
 		set_registers(g_registers, AH, BIT_8, ah);
@@ -237,7 +237,7 @@ int op_sahf(uint8_t op)
 {
 	if (op == OP_SAHF)
 	{
-		pretty_print(PC + 1, 0, "sahf\n");
+		pretty_print(PC + 1, 0, "sahf");
 		PC += 1;
 		return 1;
 	}
@@ -249,7 +249,7 @@ int op_pushf(uint8_t op)
 {
 	if (op == OP_PUSHF)
 	{
-		pretty_print(PC + 1, 0, "pushf\n");
+		pretty_print(PC + 1, 0, "pushf");
 		PC += 1;
 		return 1;
 	}
@@ -261,7 +261,7 @@ int op_popf(uint8_t op)
 {
 	if (op == OP_POPF)
 	{
-		pretty_print(PC + 1, 0, "popf\n");
+		pretty_print(PC + 1, 0, "popf");
 		PC += 1;
 		return 1;
 	}
@@ -285,7 +285,7 @@ int op_mov_2(uint8_t byte1)
 		set_registers(g_registers, reg, w, data);
 
 		char instr[32];
-		sprintf(instr, "+mov %s, %04hx\n", get_reg(reg, w), data);
+		sprintf(instr, "+mov %s, %04hx", get_reg(reg, w), data);
 		pretty_print(PC + 1, 2, instr);
 		PC += 2 + w;
 		return 1;
@@ -303,12 +303,17 @@ int op_call_0(uint8_t op)
 		int16_t increment = (g_text_segment[PC + 2] << 8) | 
 			g_text_segment[PC + 1];
 
-		push_stack(PC + 3, BIT_16); // Push next instruction
 
 		char instr[32];
-		sprintf(instr, "+call %04hx\n", PC + 3 + increment);
+		sprintf(instr, "+call %04hx", PC + 3 + increment);
 		pretty_print(PC + 1, 2, instr);
 
+		if (PROGRAM_MODE == DISSASSEMBLE)
+		{
+			PC += 3;
+			return;
+		}
+		push_stack(PC + 3, BIT_16); // Push next instruction
 		PC += increment + 3; // go to function
 
 		return 1;	
@@ -320,6 +325,7 @@ int op_call_0(uint8_t op)
 // JUMPS
 int op_jmp(uint8_t op)
 {
+	uint16_t pc;
 	if (op == OP_JMP_0)
 	{
 		uint8_t byte1, byte2;
@@ -329,21 +335,25 @@ int op_jmp(uint8_t op)
 		uint16_t target = PC + 3 + data16b;
 
 		char instr[32];
-		sprintf(instr, "+jmp %04hx\n", target);
+		sprintf(instr, "+jmp %04hx", target);
 		pretty_print(PC + 1, 2, instr);
-		PC = target;
+		PC += 3;
+		pc = target;
 	}
 	else if (op == OP_JMP_1)
 	{
 		int8_t disp = g_text_segment[PC + 1];
 		char instr[32];
-		sprintf(instr, "+jmp short %04hx\n", PC + 2 + disp);
+		sprintf(instr, "+jmp short %04hx", PC + 2 + disp);
 		pretty_print(PC + 1, 1, instr);
 
-		PC += 2 + disp;
+		pc = PC + 2 + disp;
+		PC += 2;
 	}
 	else
 		return 0;
+	if (PROGRAM_MODE != DISSASSEMBLE)
+		PC = pc;
 	return 1;
 }
 
@@ -434,11 +444,11 @@ int op_cond_jmp(uint8_t op)
 	}
 	
 	char instr[32];
-	sprintf(instr, "%s %04hx\n", op_name, PC + 2 + disp);
+	sprintf(instr, "%s %04hx", op_name, PC + 2 + disp);
 	pretty_print(PC + 1, 1, instr);
 
 	PC += 2;
-	if (can_jump)
+	if (can_jump && PROGRAM_MODE != DISSASSEMBLE)
 		PC += disp;
 	
 	return 1;
@@ -451,15 +461,18 @@ int op_int(uint8_t op)
 	{
 		char instr[32];
 		uint8_t type = g_text_segment[PC + 1];
-		sprintf(instr, "int %hhx\n", type);
+		sprintf(instr, "int %hhx", type);
 		pretty_print(PC + 1, 1, instr);
 
 		PC += 2;
-		syscall_hat(g_memory, g_registers);
+		if (PROGRAM_MODE != DISSASSEMBLE)
+		{
+			syscall_hat(g_memory, g_registers);
+		}
 	}
 	else if (op == OP_INT_1)
 	{
-		pretty_print(PC + 1, 0, "int 3\n");
+		pretty_print(PC + 1, 0, "int 3");
 		PC += 1;
 	}
 	else
@@ -471,9 +484,10 @@ int op_ret(uint8_t op)
 {
 	if (op == OP_RET_0)
 	{
-		pretty_print(PC + 1, 0, "+ret\n");
+		pretty_print(PC + 1, 0, "+ret");
 		PC += 1;
-		PC = pop_stack(BIT_16);
+		if (PROGRAM_MODE != DISSASSEMBLE)
+			PC = pop_stack(BIT_16);
 		//²// i don't know... so I hardcoded that
 		//²if (PC == 0)
 		//²	PC += 1;
@@ -483,11 +497,12 @@ int op_ret(uint8_t op)
 	{
 		char instr[32];
 		uint16_t data = g_text_segment[PC + 1] + (g_text_segment[PC + 2] << 8);
-		sprintf(instr, "+ret %04hx\n", data);
+		sprintf(instr, "+ret %04hx", data);
 		pretty_print(PC + 1, 2, instr);
 
 		PC += 3;
-		PC = pop_stack(BIT_16);
+		if (PROGRAM_MODE != DISSASSEMBLE)
+			PC = pop_stack(BIT_16);
 		g_registers[SP] += data;// * 2;
 	}
 	else
@@ -499,7 +514,7 @@ int op_cbw(uint8_t op)
 {
 	if (op == OP_CBW)
 	{
-		pretty_print(PC + 1, 0, "+cbw\n");
+		pretty_print(PC + 1, 0, "+cbw");
 		// sign extend
 		g_registers[AX] = (g_registers[AX] & 0x0080 ? 0xFF00 : 0x0000) | (g_registers[AX] & 0X00FF);
 		PC += 1;
@@ -513,7 +528,7 @@ int op_cwd(uint8_t op)
 {
 	if (op == OP_CWD)
 	{
-		pretty_print(PC + 1, 0, "+cwd\n");
+		pretty_print(PC + 1, 0, "+cwd");
 		PC += 1;
 		uint16_t reg = get_registers(g_registers, AX, BIT_16);
 		// sign extend AX to DX
@@ -544,7 +559,7 @@ int op_sub_2(uint8_t byte1)
 		}
 		else
 			PC += 2;
-		sprintf(instr, "+sub %s, %04hx\n", w ? "ax" : "al", rdata);
+		sprintf(instr, "+sub %s, %04hx", w ? "ax" : "al", rdata);
 		pretty_print(PC + 1, 1 + w, instr);
 
 		uint16_t ldata = get_registers(g_registers, AX, w);
@@ -579,7 +594,7 @@ int op_ssb_2(uint8_t byte1)
 		}
 		else
 			PC += 2;
-		sprintf(instr, "sbb %s, %04hx\n", w ? "ax" : "al", data);
+		sprintf(instr, "sbb %s, %04hx", w ? "ax" : "al", data);
 		pretty_print(PC + 1, 1 + w, instr);
 
 	}
@@ -612,14 +627,28 @@ int op_logic(uint8_t byte1)
 				data = print_mr_vw("+shl", byte2, v, w);
 				val = get_data(data, w);
 				res = val << count;
-				g_flags.CF = (val & ((w ? 0x8000 : 0x80) >> (count - 1))) == 1;
-				g_flags.OF = (w ? IS_NEG16(res) : IS_NEG8(res)) != g_flags.CF;
+				g_flags.CF = (res & ((w ? 0x8000 : 0x80) >> (count - 1))) == 1;
+				//if (count == 1) // error coming from the ref?
+				// this should be done only for 1 bit shifts
+					g_flags.OF = (w ? IS_NEG16(res) : IS_NEG8(res)) != g_flags.CF;
 				break;
 			case OP_SHR_FLAG:
 				data = print_mr_vw("shr", byte2, v, w);
 				break;
 			case OP_SAR_FLAG:
-				data = print_mr_vw("sar", byte2, v, w);
+				data = print_mr_vw("+sar", byte2, v, w);
+				val = get_data(data, w);
+				res = w ? val : SIGN_EXTEND16(val);
+				uint16_t sign_extend = IS_NEG16(res) ? 0x8000 : 0;
+				for (int i = 0; i < count; ++i)
+				{
+					g_flags.CF = res & 0x0001;
+					res  >>= 1;
+					res |= sign_extend;
+				}
+				if (count == 1)
+					g_flags.OF = 0; // cleared
+
 				break;
 			case OP_ROL_FLAG:
 				data = print_mr_vw("rol", byte2, v, w);
@@ -638,8 +667,8 @@ int op_logic(uint8_t byte1)
 		}
 
 		set_data(data, w, res);
-		g_flags.ZF = val == 0;
-		g_flags.SF = w ? IS_NEG16(val) : IS_NEG8(val);
+		g_flags.ZF = res == 0;
+		g_flags.SF = w ? IS_NEG16(res) : IS_NEG8(res);
 	}
 	else
 		return 0;
@@ -650,7 +679,7 @@ int op_clc(uint8_t op)
 {
 	if (op == OP_CLC)
 	{
-		pretty_print(PC + 1, 0, "clc\n");
+		pretty_print(PC + 1, 0, "clc");
 		PC += 1;
 	}
 	else
@@ -662,7 +691,7 @@ int op_cmc(uint8_t op)
 {
 	if (op == OP_CMC)
 	{
-		pretty_print(PC + 1, 0, "cmc\n");
+		pretty_print(PC + 1, 0, "cmc");
 		PC += 1;
 	}
 	else
@@ -674,7 +703,7 @@ int op_stc(uint8_t op)
 {
 	if (op == OP_STC)
 	{
-		pretty_print(PC + 1, 0, "stc\n");
+		pretty_print(PC + 1, 0, "stc");
 		PC += 1;
 	}
 	else
@@ -686,7 +715,7 @@ int op_cld(uint8_t op)
 {
 	if (op == OP_CLD)
 	{
-		pretty_print(PC + 1, 0, "cld\n");
+		pretty_print(PC + 1, 0, "cld");
 		PC += 1;
 	}
 	else
@@ -698,7 +727,7 @@ int op_std(uint8_t op)
 {
 	if (op == OP_STD)
 	{
-		pretty_print(PC + 1, 0, "std\n");
+		pretty_print(PC + 1, 0, "std");
 		PC += 1;
 	}
 	else
@@ -710,7 +739,7 @@ int op_cli(uint8_t op)
 {
 	if (op == OP_CLI)
 	{
-		pretty_print(PC + 1, 0, "cli\n");
+		pretty_print(PC + 1, 0, "cli");
 		PC += 1;
 	}
 	else
@@ -722,7 +751,7 @@ int op_sti(uint8_t op)
 {
 	if (op == OP_STI)
 	{
-		pretty_print(PC + 1, 0, "sti\n");
+		pretty_print(PC + 1, 0, "sti");
 		PC += 1;
 	}
 	else
@@ -734,7 +763,7 @@ int op_hlt(uint8_t op)
 {
 	if (op == OP_HLT)
 	{
-		pretty_print(PC + 1, 0, "hlt\n");
+		pretty_print(PC + 1, 0, "hlt");
 		PC += 1;
 	}
 	else
@@ -746,7 +775,7 @@ int op_wait(uint8_t op)
 {
 	if (op == OP_WAIT)
 	{
-		pretty_print(PC + 1, 0, "wait\n");
+		pretty_print(PC + 1, 0, "wait");
 		PC += 1;
 	}
 	else
@@ -765,13 +794,13 @@ int op_test_2(uint8_t byte1)
 		{
 			data = g_text_segment[PC + 1] | (g_text_segment[PC + 2] << 8);
 			PC += 3;
-			sprintf(instr, "test ax, %04hx\n", data);
+			sprintf(instr, "test ax, %04hx", data);
 		}
 		else
 		{
 			data = g_text_segment[PC + 1];
 			PC += 2;
-			printf("test al, %i\n", (int8_t)data);
+			printf("test al, %i", (int8_t)data);
 		}
 		pretty_print(PC + 1, 1 + w, instr);
 	}
@@ -814,7 +843,7 @@ int op_string(uint8_t byte1)
 	{
 		char type = W(byte1) ? 'w' : 'b';
 		char instr[32];
-		sprintf(instr, "%s%c\n", action, type);
+		sprintf(instr, "%s%c", action, type);
 		pretty_print(PC, 0, instr);
 		PC += 1;
 		return 1;
@@ -834,7 +863,7 @@ int op_rep(uint8_t byte1)
 
 		char instr[32];
 		char *sub_inst = to_op_string(byte2);
-		sprintf(instr, "rep %s%c\n", sub_inst,
+		sprintf(instr, "rep %s%c", sub_inst,
 			w ? 'w' : 'b');
 		pretty_print(PC + 1, 1, instr);
 		PC += 1;

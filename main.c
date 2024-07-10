@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <byteswap.h>
 #include <stdint.h>
+#include <string.h>
+#include <err.h>
 
 #include "file_utils.h"
 #include "utils.h"
@@ -17,30 +19,49 @@
 
 void instruct()
 {
+	static int (*instruction_group[])(void) =
+	{
+		op_dw, op_sw, op_w, instructs_reg_only, op_others, op_pc, 0
+	};
 	uint8_t op = g_text_segment[PC];
 
-	print_registers_state();
-	printf("%04lx:%02hhx", PC, op);
-	if (op_dw())
-		return;
-	else if (op_sw())
-		return;
-	else if (op_w())
-		return;
-	else if (instructs_reg_only())
-		return;
-	else if (op_others())
-		return;
-	else if (op_pc())
-		return;
+	if (PROGRAM_MODE == INTERPRET_DEBUG)
+	{
+		print_registers_state();
+		printf("%04lx:%02hhx", PC, op);
+	}
+	else if (PROGRAM_MODE == DISSASSEMBLE)
+		printf("%04lx: %02hhx", PC, op);
+
+	int i = 0;
+	while (!instruction_group[i]())
+		i++;
+	if (PROGRAM_MODE != INTERPRET)
+		printf("\n");
 }
 
 int main(int argc, char **argv)
 {
-	if (argc != 2)
+	if (argc < 2)
 		return 1;
+	char *path;
+	if (argc == 2)
+	{
+		PROGRAM_MODE = INTERPRET;
+		path = argv[1];
+	}
+	else if (argc == 3)
+	{
+		path = argv[2];
+		if (strcmp(argv[1], "-m") == 0)
+			PROGRAM_MODE = INTERPRET_DEBUG;
+		else if (strcmp(argv[1], "-d") == 0)
+			PROGRAM_MODE = DISSASSEMBLE;
+		else
+			err(EXIT_FAILURE, "Unknown option %s. Use either -m or -d.", argv[1]);
+
+	}
 	
-	char *path = argv[1];
 	int fd = open(path, O_RDONLY);
 	char *content;
 	read_whole_file(fd, &content);
@@ -80,20 +101,21 @@ int main(int argc, char **argv)
 	g_stack[0xffea] = 0x74;
 	//set_registers(g_registers, SP, BIT_16, header->a_data);
 
-	printf("sizeof %zu\n", sizeof(struct flags));
-
-	print_registers_header();
+	
+	if (PROGRAM_MODE == INTERPRET_DEBUG)
+		print_registers_header();
 	while (PC < header->a_text - 1)
 	{
 		instruct();
 	}
-	//printf("%04hx: 00		(undefined)\n", PC);
-	print_registers_state();
-	printf("%04hx:not support rom=0 in writeEA\n", PC);
+	if (PROGRAM_MODE == DISSASSEMBLE)
+		printf("%04hx: 00		(undefined)\n", PC);
+	//print_registers_state();
+	//printf("%04hx:not support rom=0 in writeEA\n", PC);
 
-	printf("\n");
-	for (int32_t i = 0; i < header->a_data; ++i)
-		printf("%c", data_area[i]);
+	//printf("\n");
+	//for (int32_t i = 0; i < header->a_data; ++i)
+	//	printf("%c", data_area[i]);
 
 
 	return 0;	

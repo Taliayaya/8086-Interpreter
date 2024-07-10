@@ -8,6 +8,9 @@ struct flags g_flags = {0,};
 uint8_t *g_text_segment;
 uint16_t PC;
 
+enum program_mode PROGRAM_MODE;
+
+
 char *get_reg(uint8_t reg, int w)
 {
 	char *regs16b[] = {"ax", "cx", "dx", "bx", "sp", "bp", "si", "di"};

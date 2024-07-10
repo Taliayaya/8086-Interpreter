@@ -78,7 +78,7 @@ struct	exec {			/* a.out header */
 #define IS_NEG16(x) ((x & 0x8000) == 0x8000)
 #define IS_NEG8(x)	((x & 0x80)	  == 0x80)
 
-#define SIGN_EXTEND16(x) (IS_NEG8(x) ? OxFF00 | x : x)
+#define SIGN_EXTEND16(x) (IS_NEG8(x) ? 0xFF00 | x : x)
 
 #define STACK_CAPACITY 0xFFFF
 
@@ -135,6 +135,13 @@ enum mod_data_type
 	MOD_IMM_8
 };
 
+enum program_mode
+{
+	DISSASSEMBLE,
+	INTERPRET_DEBUG,
+	INTERPRET
+};
+
 // shortcuts for union
 #define _reg	data.reg
 #define _ea		data.ea
@@ -169,6 +176,8 @@ extern int8_t *g_stack;
 extern struct flags g_flags;
 extern uint8_t *g_text_segment;
 extern uint16_t PC;
+
+extern enum program_mode PROGRAM_MODE;
 
 char *get_reg(uint8_t reg, int w);
 char *get_r_m(uint8_t r_m);
