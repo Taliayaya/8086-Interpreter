@@ -40,7 +40,7 @@ int op_mov_0(uint8_t op,
 	{
 		struct print_data rdata;
 		PC += 2;
-		rdata = print_mrr("+mov", byte2, d, w);
+		rdata = print_mrr(OP_DONE_MARK"mov", byte2, d, w);
 		if (rdata.data_left.type == MOD_REG && rdata.data_right.type == MOD_REG)
 		{
 			int16_t data = get_registers(g_registers, rdata.data_right._reg, w);
@@ -74,7 +74,7 @@ int op_add_0(uint8_t op,
 		PC += 2;
 		struct calc_data data;
 		struct print_data pdata;
-		pdata = print_mrr("+add", byte2, d, w);
+		pdata = print_mrr(OP_DONE_MARK"add", byte2, d, w);
 		data = process_operation(pdata, CALC_ADD, d, w);
 		g_flags.SF = w ? (data.result & 0x8000) == 0x8000 : (data.result & 0x80) == 0x80;
 		g_flags.ZF = data.result == 0;
@@ -95,6 +95,7 @@ int op_adc_0(uint8_t op,
 	{
 		PC += 2;
 		print_mrr("adc", byte2, d, w);
+		NOT_IMPLEMENTED("adc");
 		return 1;
 	}
 	else
@@ -109,7 +110,7 @@ int op_sub_0(uint8_t op,
 		PC += 2;
 		struct print_data pdata;
 		struct calc_data data;
-		pdata = print_mrr("+sub", byte2, d, w);
+		pdata = print_mrr(OP_DONE_MARK"sub", byte2, d, w);
 		data = process_operation(pdata, CALC_SUB, d, w);
 		g_flags.OF = w ? ((IS_NEG16(data.left) && !IS_NEG16(data.right) && !IS_NEG16(data.result)) || (!IS_NEG16(data.left) && IS_NEG16(data.right) && IS_NEG16(data.result))) : ((IS_NEG8(data.left) && !IS_NEG8(data.right) && !IS_NEG8(data.result)) || (!IS_NEG8(data.left) && IS_NEG8(data.right) && IS_NEG8(data.result)));
 		g_flags.SF = w ? IS_NEG16(data.result) : IS_NEG8(data.result); // negative
@@ -130,6 +131,7 @@ int op_ssb_0(uint8_t op,
 	{
 		PC += 2;
 		print_mrr("sbb", byte2, d, w);
+		NOT_IMPLEMENTED("sbb");
 		return 1;
 	}
 	else
@@ -143,7 +145,7 @@ int op_cmp_0(uint8_t op,
 	{
 		PC += 2;
 		struct print_data pdata;
-		pdata = print_mrr("+cmp", byte2, d, w);
+		pdata = print_mrr(OP_DONE_MARK"cmp", byte2, d, w);
 		uint16_t ldata, rdata, result;
 		// MOD_REG == MOD_REG
 		if (pdata.data_left.type == pdata.data_right.type) 	
@@ -196,7 +198,7 @@ int op_and_0(uint8_t op,
 	{
 		PC += 2;
 		struct print_data pdata;
-		pdata = print_mrr("+and", byte2, d, w);
+		pdata = print_mrr(OP_DONE_MARK"and", byte2, d, w);
 
 		struct calc_data data;
 		data = process_operation(pdata, CALC_AND, d, w);
@@ -220,7 +222,7 @@ int op_or_0(uint8_t op,
 	{
 		PC += 2;
 		struct print_data pdata;
-		pdata = print_mrr("+or", byte2, d, w);
+		pdata = print_mrr(OP_DONE_MARK"or", byte2, d, w);
 		// REG == REG
 		struct calc_data data;
 		data = process_operation(pdata, CALC_OR, d, w);
@@ -245,7 +247,7 @@ int op_xor_0(uint8_t op,
 	{
 		PC += 2;
 		struct print_data pdata;
-		pdata = print_mrr("+xor", byte2, d, w);
+		pdata = print_mrr(OP_DONE_MARK"xor", byte2, d, w);
 
 		struct calc_data data = process_operation(pdata, CALC_XOR, d, w);
 

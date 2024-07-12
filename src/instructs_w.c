@@ -72,7 +72,7 @@ int op_mov_1(uint8_t op, uint8_t flag,
 	{
 		struct print_data rdata;
 		PC += 2;
-		rdata = print_mr_data("+mov", byte2, w);
+		rdata = print_mr_data(OP_DONE_MARK"mov", byte2, w);
 
 		if (rdata.data_left.type == MOD_REG)
 		{
@@ -101,6 +101,7 @@ int op_mov_3(uint8_t op, uint8_t flag,
 		pretty_print(PC + 1, 2, instr);
 
 		PC += 3;
+		NOT_IMPLEMENTED("mov_3");
 		return 1;
 	}
 	else
@@ -118,6 +119,8 @@ int op_mov_4(uint8_t op, uint8_t flag,
 		pretty_print(PC + 1, 2, instr);
 
 		PC += 3;
+
+		NOT_IMPLEMENTED("mov_4");
 		return 1;
 	}
 	else
@@ -141,6 +144,8 @@ int op_add_2(uint8_t op, uint8_t flag,
 		}
 		pretty_print(PC + 1, 1 + w, instr);
 		PC += 2 + w;
+
+		NOT_IMPLEMENTED("add_2");
 		return 1;
 	}
 	else
@@ -164,6 +169,7 @@ int op_adc_2(uint8_t op, uint8_t flag,
 		}
 		pretty_print(PC + 1, 1 + w, instr);
 		PC += 2 + w;
+		NOT_IMPLEMENTED("adc_2");
 		return 1;
 	}
 	else
@@ -178,7 +184,7 @@ int op_inc_0(uint8_t op, uint8_t flag,
 	{
 		PC += 2;
 		struct operation_data rdata;
-		rdata = print_mr("+inc", byte2, w);
+		rdata = print_mr(OP_DONE_MARK"inc", byte2, w);
 		uint16_t data;
 		if (rdata.type == MOD_REG)
 		{
@@ -208,7 +214,7 @@ int op_dec_0(uint8_t op, uint8_t flag,
 	{
 		PC += 2;
 		struct operation_data data;
-		data = print_mr("+dec", byte2, w);
+		data = print_mr(OP_DONE_MARK"dec", byte2, w);
 
 		uint16_t val;
 		if (data.type == MOD_REG)
@@ -240,7 +246,7 @@ int op_neg(uint8_t op, uint8_t flag,
 	{
 		PC += 2;
 		struct operation_data pdata;
-		pdata = print_mr("+neg", byte2, w);
+		pdata = print_mr(OP_DONE_MARK"neg", byte2, w);
 		uint16_t data;
 		if (pdata.type == MOD_REG)
 		{
@@ -272,6 +278,8 @@ int op_mul(uint8_t op, uint8_t flag,
 	{
 		PC += 2;
 		print_mr("mul", byte2, w);
+
+		NOT_IMPLEMENTED("mul");
 		return 1;
 	}
 	else
@@ -285,6 +293,8 @@ int op_imul(uint8_t op, uint8_t flag,
 	{
 		PC += 2;
 		print_mr("imul", byte2, w);
+
+		NOT_IMPLEMENTED("imul");
 		return 1;
 	}
 	else
@@ -298,7 +308,7 @@ int op_div(uint8_t op, uint8_t flag,
 	{
 		PC += 2;
 		struct operation_data data;
-		data = print_mr("+div", byte2, w);
+		data = print_mr(OP_DONE_MARK"div", byte2, w);
 		if (PROGRAM_MODE == DISSASSEMBLE)
 			return -1;
 
@@ -347,6 +357,8 @@ int op_idiv(
 	{
 		PC += 2;
 		print_mr("idiv", byte2, w);
+
+		NOT_IMPLEMENTED("idiv");
 		return 1;
 	}
 	else
@@ -360,6 +372,8 @@ int op_not(
 	{
 		PC += 2;
 		print_mr("not", byte2, w);
+
+		NOT_IMPLEMENTED("not");
 		return 1;
 	}
 	else
@@ -373,7 +387,7 @@ int op_and_1(
 	{
 		PC += 2;
 		struct print_data pdata;
-		pdata = print_mr_data("+and", byte2, w);
+		pdata = print_mr_data(OP_DONE_MARK"and", byte2, w);
 		uint16_t ldata, result;
 		if (pdata.data_left.type == MOD_REG)
 		{
@@ -406,7 +420,7 @@ int op_xchg_0(
 	{
 		PC += 2;
 		struct print_data pdata;
-		pdata = print_mrr("+xchg", byte2, 0, w);
+		pdata = print_mrr(OP_DONE_MARK"xchg", byte2, 0, w);
 		uint16_t ldata, rdata;
 		if (pdata.data_left.type == pdata.data_right.type) 	
 		{
@@ -440,7 +454,7 @@ int op_test_0(uint8_t op, uint8_t flag,
 		PC += 2;
 
 		struct print_data pdata;
-		pdata = print_mrr("+test", byte2, 0, w);
+		pdata = print_mrr(OP_DONE_MARK"test", byte2, 0, w);
 		uint16_t ldata, rdata, result;
 		if (pdata.data_left.type == MOD_REG)
 			ldata = get_registers(g_registers, pdata.data_left._reg, w);
@@ -472,7 +486,7 @@ int op_test_1(uint8_t op, uint8_t flag,
 	{
 		PC += 2;
 		struct print_data pdata;
-		pdata = print_mr_data("+test", byte2, w);
+		pdata = print_mr_data(OP_DONE_MARK"test", byte2, w);
 		uint16_t ldata, result;
 		if (pdata.data_left.type == MOD_REG)
 			ldata = get_registers(g_registers, pdata.data_left._reg, w);
@@ -497,7 +511,7 @@ int op_or_1(uint8_t op, uint8_t flag,
 	{
 		PC += 2;
 		struct print_data pdata;
-		pdata = print_mr_data("+or", byte2, w);
+		pdata = print_mr_data(OP_DONE_MARK"or", byte2, w);
 		uint16_t ldata, result;
 		if (pdata.data_left.type == MOD_REG)
 		{
@@ -530,7 +544,7 @@ int op_xor_1(uint8_t op, uint8_t flag,
 	{
 		PC += 2;
 		struct print_data rdata;
-		rdata = print_mr_data("+xor", byte2, w);
+		rdata = print_mr_data(OP_DONE_MARK"xor", byte2, w);
 		uint16_t mem_reg, result;
 		if (rdata.data_left.type == MOD_REG)
 		{
@@ -568,11 +582,11 @@ int op_cmp_2(uint8_t op, uint8_t flag,
 		if (w == 1)
 		{
 			data = byte2 | (g_text_segment[PC + 2] << 8);
-			sprintf(instr, "+cmp ax, %04hx", data);
+			sprintf(instr, OP_DONE_MARK"cmp ax, %04hx", data);
 		}
 		else
 		{
-			sprintf(instr, "+cmp al, %02hhx", byte2);
+			sprintf(instr, OP_DONE_MARK"cmp al, %02hhx", byte2);
 		}
 
 		ldata = get_registers(g_registers, AX, w);
@@ -608,7 +622,7 @@ int op_push_0(uint8_t op, uint8_t flag,
 	{
 		struct operation_data odata;
 		PC += 2;
-		odata = print_mr("+push", byte2, BIT_16);
+		odata = print_mr(OP_DONE_MARK"push", byte2, BIT_16);
 		if (odata.type == MOD_REG)
 			push_reg_stack(odata._reg, BIT_16);
 		else
@@ -627,7 +641,7 @@ int op_pop_0(uint8_t op, uint8_t flag,
 	{
 		struct operation_data odata;
 		PC += 2;
-		odata = print_mr("+pop", byte2, BIT_16);
+		odata = print_mr(OP_DONE_MARK"pop", byte2, BIT_16);
 		if (odata.type == MOD_REG)
 			pop_reg_stack(odata._reg, BIT_16);
 		else
@@ -645,7 +659,7 @@ int op_call_1(uint8_t op, uint8_t flag,
 	{
 		PC += 2;
 		struct operation_data data;
-		data = print_mr("+call", byte2, 1);
+		data = print_mr(OP_DONE_MARK"call", byte2, 1);
 
 		if (PROGRAM_MODE == DISSASSEMBLE)
 			return 1;
@@ -672,7 +686,7 @@ int op_jmp_2(uint8_t op, uint8_t flag,
 	{
 		PC += 2;
 		struct operation_data data;
-		data = print_mr("+jmp", byte2, BIT_16);
+		data = print_mr(OP_DONE_MARK"jmp", byte2, BIT_16);
 		if (PROGRAM_MODE == DISSASSEMBLE)
 			return 1;
 
@@ -693,6 +707,8 @@ int op_jmp_4(uint8_t op, uint8_t flag,
 	{
 		PC += 2;
 		print_mr("jmp", byte2, 1);
+
+		NOT_IMPLEMENTED("jmp_4");
 		return 1;
 	}
 	else

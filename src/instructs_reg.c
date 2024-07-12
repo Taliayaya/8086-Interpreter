@@ -49,7 +49,7 @@ int op_push_1(uint8_t op, uint8_t reg)
 {
 	if (op == OP_PUSH_1)
 	{
-		print_reg("+push", reg, DEFAULT_W);
+		print_reg(OP_DONE_MARK"push", reg, DEFAULT_W);
 		push_reg_stack(reg, BIT_16);
 		return 1;
 	}
@@ -61,7 +61,7 @@ int op_pop_1(uint8_t op, uint8_t reg)
 {
 	if (op == OP_POP_1)
 	{
-		print_reg("+pop", reg, DEFAULT_W);
+		print_reg(OP_DONE_MARK"pop", reg, DEFAULT_W);
 		pop_reg_stack(reg, BIT_16);
 		return 1;
 	}
@@ -75,7 +75,7 @@ int op_xchg_1(uint8_t op, uint8_t reg)
 	if (op == OP_XCHG_1)
 	{
 		char instr[32];
-		sprintf(instr, "+xchg %s, ax\n", get_reg(reg, DEFAULT_W));
+		sprintf(instr, OP_DONE_MARK"xchg %s, ax\n", get_reg(reg, DEFAULT_W));
 		pretty_print(PC + 1, 0, instr);
 
 		uint16_t ldata, rdata;
@@ -93,7 +93,7 @@ int op_inc_1(uint8_t op, uint8_t reg)
 {
 	if (op == OP_INC_1)
 	{
-		print_reg("+inc", reg, DEFAULT_W);
+		print_reg(OP_DONE_MARK"inc", reg, DEFAULT_W);
 		uint16_t data;
 		data = get_registers(g_registers, reg, BIT_16);
 		set_registers(g_registers, reg, BIT_16, data + 1);
@@ -112,7 +112,7 @@ int op_dec_1(uint8_t op, uint8_t reg)
 {
 	if (op == OP_DEC_1)
 	{
-		print_reg("+dec", reg, DEFAULT_W);
+		print_reg(OP_DONE_MARK"dec", reg, DEFAULT_W);
 		uint16_t data = get_registers(g_registers, reg, BIT_16);
 		set_registers(g_registers, reg, BIT_16, data - 1);
 

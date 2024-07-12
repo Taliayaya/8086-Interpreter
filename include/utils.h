@@ -5,6 +5,8 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+#include "color.h"
+
 #define _CHEAT_
 
 #ifdef _CHEAT_
@@ -37,6 +39,8 @@ struct	exec {			/* a.out header */
 #endif
 
 #define EA_STRING_SIZE 16
+
+#define OP_DONE_MARK "+"
 
 // RIGHT BYTE
 #define MOD(x) ((x & 0b11000000) >>  6)
@@ -77,6 +81,25 @@ struct	exec {			/* a.out header */
 
 #define IS_NEG16(x) ((x & 0x8000) == 0x8000)
 #define IS_NEG8(x)	((x & 0x80)	  == 0x80)
+#define IS_NEG(x, w) (w ? IS_NEG16(x) : IS_NEG8(x))
+
+#define POSPOS_NEG(left, right, result, w) (!IS_NEG(left, w) && !IS_NEG(right, w) &&  IS_NEG(result, w)) 
+#define NEGNEG_POS(left, right, result, w) ( IS_NEG(left, w) &&  IS_NEG(right, w) && !IS_NEG(result, w))
+#define OVERFLOW(left, right, result, w) (POSPOS_NEG(left, right, result, w) || NEGNEG_POS(left, right, result, w))
+
+#define NOT_IMPLEMENTED(op) 								\
+({															\
+	if (PROGRAM_MODE != DISSASSEMBLE)						\
+	{														\
+		if (PROGRAM_MODE == INTERPRET_DEBUG)				\
+		{													\
+			printf("\n");									\
+		}													\
+		printf(RED"/!\\ "BOLDRED"[ "op" ]"RESET RED			\
+		" was not implemented. "							\
+			"Unexpected behavior may occur.\n"RESET);		\
+	}														\
+})
 
 #define SIGN_EXTEND16(x) (IS_NEG8(x) ? 0xFF00 | x : x)
 

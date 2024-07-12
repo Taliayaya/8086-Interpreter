@@ -1,18 +1,52 @@
 CC = gcc
-CFLAGS = -Wall -Wextra -g -std=c11
+CFLAGS = -Wall -Wextra -g -std=c11 -I$(INCDIR) $(INCLUDE_FLAGS)
 LDFLAGS =
 LDLIBS =
 
-SRC = main.c file_utils.c prints.c utils.c instructs_dw.c instructs_w.c instructs_reg.c instructs_sw.c instructs.c syscalls.c
+ODIR 	= build
+TESTDIR = tests
+SRCDIR 	= src
+INCDIR 	= include
+LIBDIR 	= lib
+BINDIR 	= bin
 
-OBJ = ${SRC:.c=.o}
-EXE = ${SRC:.c=}
+SRCS  	:= $(wildcard $(SRCDIR)/**/*.c $(SRCDIR)/*.c)
+SRCDIRS := $(sort $(dir $(SRCS)))
+OBJS 	:= $(patsubst $(SRCDIR)/%.c,$(ODIR)/%.o,$(SRCS))
+LIBSINC	:= $(wildcard $(LIBDIR)/**/include/*.h)
 
-all: main 
+LIB_DIRS := $(shell find $(LIBDIR) -type d -name 'include')
 
-main: ${OBJ} 
-nomain: file_utils.o prints.o utils.o instructs_dw.o instructs_w.o instructs_reg.o instructs_sw.o instructs.o
+# Generate -I flags
+INCLUDE_FLAGS := $(foreach dir,$(LIB_DIRS),-I $(dir))
+
+
+
+# Test source files
+TESTSRCS := $(wildcard $(TESTDIR)/*.c)
+TESTOBJS := $(patsubst $(TESTDIR)/%.c, $(ODIR)/%.o, $(TESTSRCS))
+
+# Object directory creation
+$(shell mkdir -p $(ODIR) $(SRCDIRS:$(SRCDIR)%=$(ODIR)%))
+
+# Rules
+$(ODIR)/%.o: $(SRCDIR)/%.c
+	$(CC) -c -o $@ $< $(CFLAGS)
+
+# Targets
+all: z124043_mmvm #$(TESTDIR)/utest
+
+debug: 
+	echo $(INCLUDE_FLAGS)
+
+z124043_mmvm: $(OBJS)
+	$(CC) -o $(BINDIR)/$@ $^ $(CFLAGS) $(LIBS)
 
 .PHONY: clean
-clean: 
-	${RM} ${OBJ} ${EXE}
+
+clean:
+	rm -f $(ODIR)/*.o
+	rm -rf $(ODIR)/*
+	rm -f z124043_mmvm
+	#rm -f $(TESTDIR)/utest
+

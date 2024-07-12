@@ -4,9 +4,9 @@
 
 #include "utils.h"
 
-#include "callnr.h"
-#include "type.h"
-#include "com.h"
+#include "minix/callnr.h"
+#include "minix/type.h"
+#include "minix/com.h"
 
 typedef void (*fn_syscall_print)(uint8_t *, uint16_t[8], message *);
 

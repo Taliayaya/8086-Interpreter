@@ -71,9 +71,7 @@ int op_pc()
 		&& !instructions[index](byte1))
 		index++;
 
-	if (index < length)
-		return 1;
-	return 0;
+	return index < length;
 
 }
 
@@ -87,6 +85,9 @@ int op_push_2(uint8_t byte1)
 		sprintf(instr, "push %s", get_segreg(reg));
 		pretty_print(PC + 1, 1, instr);
 		PC += 1;
+
+
+		NOT_IMPLEMENTED("push_2");
 		return 1;
 	}
 	else
@@ -103,6 +104,7 @@ int op_pop_2(uint8_t byte1)
 		sprintf(instr, "pop %s", get_segreg(reg));
 		pretty_print(PC + 1, 1, instr);
 
+		NOT_IMPLEMENTED("pop_2");
 		return 1;
 	}
 	else
@@ -130,6 +132,7 @@ int op_in(uint8_t byte1)
 	}
 	else
 		return 0;
+	NOT_IMPLEMENTED("in");
 	return 1;
 }
 
@@ -153,6 +156,7 @@ int op_out(uint8_t byte1)
 	}
 	else
 		return 0;
+	NOT_IMPLEMENTED("out");
 	return 1;
 }
 
@@ -165,6 +169,7 @@ int op_xlat(uint8_t op)
 		pretty_print(PC + 1, 0, "xlat");
 
 		PC += 1;
+		NOT_IMPLEMENTED("xlat");
 		return 1;
 	}
 	else
@@ -178,7 +183,7 @@ int op_lea(uint8_t op)
 		uint8_t byte2 = g_text_segment[PC + 1];
 		PC += 2;
 		struct print_data rdata;
-		rdata = print_mrr("+lea", byte2, 1, 1);
+		rdata = print_mrr(OP_DONE_MARK"lea", byte2, 1, 1);
 		if (rdata.data_right.type == MOD_EA)
 			set_registers(g_registers, rdata.data_left._reg, 
 				BIT_16, rdata.data_right._ea);
@@ -198,6 +203,8 @@ int op_lds(uint8_t op)
 		uint8_t byte2 = g_text_segment[PC + 1];
 		PC += 2;
 		print_mrr("lds", byte2, 0, 0);
+		
+		NOT_IMPLEMENTED("lds");
 		return 1;
 	}
 	else
@@ -211,6 +218,8 @@ int op_les(uint8_t op)
 		uint8_t byte2 = g_text_segment[PC + 1];
 		PC += 2;
 		print_mrr("les", byte2, 0, 0);
+
+		NOT_IMPLEMENTED("les");
 		return 1;
 	}
 	else
@@ -221,11 +230,11 @@ int op_lahf(uint8_t op)
 {
 	if (op == OP_LAHF)
 	{
-		pretty_print(PC + 1, 0, "+lahf");
+		pretty_print(PC + 1, 0, OP_DONE_MARK"lahf");
 		PC += 1;
-		uint8_t ah = (g_flags.SF << 7) | (g_flags.ZF << 6) | (g_flags.CF);
-		set_registers(g_registers, AH, BIT_8, ah);
-		exit(1);
+		// NOT SUPPORTED IN 16 BITS
+		//uint8_t ah = (g_flags.SF << 7) | (g_flags.ZF << 6) | (g_flags.CF);
+		//set_registers(g_registers, AH, BIT_8, ah);
 
 		return 1;
 	}
@@ -239,6 +248,8 @@ int op_sahf(uint8_t op)
 	{
 		pretty_print(PC + 1, 0, "sahf");
 		PC += 1;
+
+		NOT_IMPLEMENTED("sahf");
 		return 1;
 	}
 	else
@@ -251,6 +262,8 @@ int op_pushf(uint8_t op)
 	{
 		pretty_print(PC + 1, 0, "pushf");
 		PC += 1;
+
+		NOT_IMPLEMENTED("pushf");
 		return 1;
 	}
 	else
@@ -263,6 +276,8 @@ int op_popf(uint8_t op)
 	{
 		pretty_print(PC + 1, 0, "popf");
 		PC += 1;
+
+		NOT_IMPLEMENTED("popf");
 		return 1;
 	}
 	else
@@ -285,7 +300,7 @@ int op_mov_2(uint8_t byte1)
 		set_registers(g_registers, reg, w, data);
 
 		char instr[32];
-		sprintf(instr, "+mov %s, %04hx", get_reg(reg, w), data);
+		sprintf(instr, OP_DONE_MARK"mov %s, %04hx", get_reg(reg, w), data);
 		pretty_print(PC + 1, 2, instr);
 		PC += 2 + w;
 		return 1;
@@ -305,7 +320,7 @@ int op_call_0(uint8_t op)
 
 
 		char instr[32];
-		sprintf(instr, "+call %04hx", PC + 3 + increment);
+		sprintf(instr, OP_DONE_MARK"call %04hx", PC + 3 + increment);
 		pretty_print(PC + 1, 2, instr);
 
 		if (PROGRAM_MODE == DISSASSEMBLE)
@@ -335,7 +350,7 @@ int op_jmp(uint8_t op)
 		uint16_t target = PC + 3 + data16b;
 
 		char instr[32];
-		sprintf(instr, "+jmp %04hx", target);
+		sprintf(instr, OP_DONE_MARK"jmp %04hx", target);
 		pretty_print(PC + 1, 2, instr);
 		PC += 3;
 		pc = target;
@@ -344,7 +359,7 @@ int op_jmp(uint8_t op)
 	{
 		int8_t disp = g_text_segment[PC + 1];
 		char instr[32];
-		sprintf(instr, "+jmp short %04hx", PC + 2 + disp);
+		sprintf(instr, OP_DONE_MARK"jmp short %04hx", PC + 2 + disp);
 		pretty_print(PC + 1, 1, instr);
 
 		pc = PC + 2 + disp;
@@ -368,74 +383,83 @@ int op_cond_jmp(uint8_t op)
 	switch(op)
 	{
 		case OP_JE:
-			op_name = "+je";
+			op_name = OP_DONE_MARK"je";
 			can_jump = g_flags.ZF;
 			break;
 		case OP_JL:
-			op_name = "+jl";
+			op_name = OP_DONE_MARK"jl";
 			can_jump = g_flags.SF != g_flags.OF;
 			break;
 		case OP_JLE:
-			op_name = "+jle";
+			op_name = OP_DONE_MARK"jle";
 			can_jump = g_flags.ZF || (g_flags.SF != g_flags.OF);
 			break;
 		case OP_JB:
-			op_name = "+jb";
+			op_name = OP_DONE_MARK"jb";
 			can_jump = g_flags.CF;
 			break;
 		case OP_JBE:
-			op_name = "+jbe";
+			op_name = OP_DONE_MARK"jbe";
 			can_jump = g_flags.CF || g_flags.ZF;
 			break;
 		case OP_JP:
 			op_name = "jl";
+			NOT_IMPLEMENTED("jl");
 			break;
 		case OP_JO:
 			op_name = "jo";
+			NOT_IMPLEMENTED("jo");
 			break;
 		case OP_JS:
 			op_name = "js";
+			NOT_IMPLEMENTED("js");
 			break;
 		case OP_JNE:
-			op_name = "+jne";
+			op_name = OP_DONE_MARK"jne";
 			can_jump = !g_flags.ZF;
 			break;
 		case OP_JNL:
-			op_name = "+jnl";
+			op_name = OP_DONE_MARK"jnl";
 			can_jump = g_flags.SF == g_flags.OF;
 			break;
 		case OP_JNLE:
-			op_name = "+jnle";
+			op_name = OP_DONE_MARK"jnle";
 			can_jump = !g_flags.ZF && (g_flags.OF == g_flags.SF);
 			break;
 		case OP_JNB:
-			op_name = "+jnb";
+			op_name = OP_DONE_MARK"jnb";
 			can_jump = !g_flags.CF;
 			break;
 		case OP_JNBE:
-			op_name = "+jnbe";
+			op_name = OP_DONE_MARK"jnbe";
 			can_jump = !g_flags.CF && !g_flags.ZF;
 			break;
 		case OP_JNP:
 			op_name = "jnp";
+			NOT_IMPLEMENTED("jnp");
 			break;
 		case OP_JNO:
 			op_name = "jno";
+			NOT_IMPLEMENTED("jno");
 			break;
 		case OP_JNS:
 			op_name = "jns";
+			NOT_IMPLEMENTED("jns");
 			break;
 		case OP_LOOP:
 			op_name = "loop";
+			NOT_IMPLEMENTED("loop");
 			break;
 		case OP_LOOPZ:
 			op_name = "loopz";
+			NOT_IMPLEMENTED("loopz");
 			break;
 		case OP_LOOPNZ:
 			op_name = "loopnz";
+			NOT_IMPLEMENTED("loopnz");
 			break;
 		case OP_JCXZ:
-			op_name = "+jcxz";
+			op_name = OP_DONE_MARK"jcxz";
 			can_jump = g_registers[CX] == 0;
 			break;
 
@@ -461,7 +485,7 @@ int op_int(uint8_t op)
 	{
 		char instr[32];
 		uint8_t type = g_text_segment[PC + 1];
-		sprintf(instr, "int %hhx", type);
+		sprintf(instr, OP_DONE_MARK"int %hhx", type);
 		pretty_print(PC + 1, 1, instr);
 
 		PC += 2;
@@ -474,6 +498,7 @@ int op_int(uint8_t op)
 	{
 		pretty_print(PC + 1, 0, "int 3");
 		PC += 1;
+		NOT_IMPLEMENTED("int 3");
 	}
 	else
 		return 0;
@@ -484,20 +509,17 @@ int op_ret(uint8_t op)
 {
 	if (op == OP_RET_0)
 	{
-		pretty_print(PC + 1, 0, "+ret");
+		pretty_print(PC + 1, 0, OP_DONE_MARK"ret");
 		PC += 1;
 		if (PROGRAM_MODE != DISSASSEMBLE)
 			PC = pop_stack(BIT_16);
-		//²// i don't know... so I hardcoded that
-		//²if (PC == 0)
-		//²	PC += 1;
 
 	}
 	else if (op == OP_RET_1)
 	{
 		char instr[32];
 		uint16_t data = g_text_segment[PC + 1] + (g_text_segment[PC + 2] << 8);
-		sprintf(instr, "+ret %04hx", data);
+		sprintf(instr, OP_DONE_MARK"ret %04hx", data);
 		pretty_print(PC + 1, 2, instr);
 
 		PC += 3;
@@ -514,9 +536,9 @@ int op_cbw(uint8_t op)
 {
 	if (op == OP_CBW)
 	{
-		pretty_print(PC + 1, 0, "+cbw");
+		pretty_print(PC + 1, 0, OP_DONE_MARK"cbw");
 		// sign extend
-		g_registers[AX] = (g_registers[AX] & 0x0080 ? 0xFF00 : 0x0000) | (g_registers[AX] & 0X00FF);
+		g_registers[AX] = SIGN_EXTEND16(g_registers[AX]);
 		PC += 1;
 	}
 	else
@@ -528,11 +550,11 @@ int op_cwd(uint8_t op)
 {
 	if (op == OP_CWD)
 	{
-		pretty_print(PC + 1, 0, "+cwd");
+		pretty_print(PC + 1, 0, OP_DONE_MARK"cwd");
 		PC += 1;
-		uint16_t reg = get_registers(g_registers, AX, BIT_16);
+		uint16_t ax_reg = get_registers(g_registers, AX, BIT_16);
 		// sign extend AX to DX
-		if (IS_NEG16(reg))
+		if (IS_NEG16(ax_reg))
 			set_registers(g_registers, DX, BIT_16, 0xFFFF);
 		else
 			set_registers(g_registers, DX, BIT_16, 0x0000);
@@ -559,15 +581,15 @@ int op_sub_2(uint8_t byte1)
 		}
 		else
 			PC += 2;
-		sprintf(instr, "+sub %s, %04hx", w ? "ax" : "al", rdata);
+		sprintf(instr, OP_DONE_MARK"sub %s, %04hx", w ? "ax" : "al", rdata);
 		pretty_print(PC + 1, 1 + w, instr);
 
 		uint16_t ldata = get_registers(g_registers, AX, w);
 		uint16_t result = ldata - rdata;
 		set_registers(g_registers, AX, w, result);
 
-		g_flags.OF = w ? ((IS_NEG16(ldata) && !IS_NEG16(rdata) && !IS_NEG16(result)) || (!IS_NEG16(ldata) && IS_NEG16(rdata) && IS_NEG16(result))) : ((IS_NEG8(ldata) && !IS_NEG8(rdata) && !IS_NEG8(result)) || (!IS_NEG8(ldata) && IS_NEG8(rdata) && IS_NEG8(result)));
-		g_flags.SF = w ? IS_NEG16(result) : IS_NEG8(result); // negative
+		g_flags.OF = OVERFLOW(ldata, rdata, result, w);
+		g_flags.SF = IS_NEG(result, w); // negative
 		g_flags.ZF = result == 0; // zero
 		g_flags.CF = ldata < rdata;
 
@@ -597,6 +619,8 @@ int op_ssb_2(uint8_t byte1)
 		sprintf(instr, "sbb %s, %04hx", w ? "ax" : "al", data);
 		pretty_print(PC + 1, 1 + w, instr);
 
+		NOT_IMPLEMENTED("sbb");
+
 	}
 	else
 		return 0;
@@ -624,7 +648,7 @@ int op_logic(uint8_t byte1)
 		switch (FLAG(byte2))
 		{
 			case OP_SHL_FLAG:
-				data = print_mr_vw("+shl", byte2, v, w);
+				data = print_mr_vw(OP_DONE_MARK"shl", byte2, v, w);
 				val = get_data(data, w);
 				res = val << count;
 				g_flags.CF = (res & ((w ? 0x8000 : 0x80) >> (count - 1))) == 1;
@@ -634,9 +658,10 @@ int op_logic(uint8_t byte1)
 				break;
 			case OP_SHR_FLAG:
 				data = print_mr_vw("shr", byte2, v, w);
+				NOT_IMPLEMENTED("shr");
 				break;
 			case OP_SAR_FLAG:
-				data = print_mr_vw("+sar", byte2, v, w);
+				data = print_mr_vw(OP_DONE_MARK"sar", byte2, v, w);
 				val = get_data(data, w);
 				res = w ? val : SIGN_EXTEND16(val);
 				uint16_t sign_extend = IS_NEG16(res) ? 0x8000 : 0;
@@ -652,15 +677,19 @@ int op_logic(uint8_t byte1)
 				break;
 			case OP_ROL_FLAG:
 				data = print_mr_vw("rol", byte2, v, w);
+				NOT_IMPLEMENTED("rol");
 				break;
 			case OP_ROR_FLAG:
 				data = print_mr_vw("ror", byte2, v, w);
+				NOT_IMPLEMENTED("ror");
 				break;
 			case OP_RCL_FLAG:
 				data = print_mr_vw("rcl", byte2, v, w);
+				NOT_IMPLEMENTED("rcl");
 				break;
 			case OP_RCR_FLAG:
 				data = print_mr_vw("rcr", byte2, v, w);
+				NOT_IMPLEMENTED("rcr");
 				break;
 			default:
 				return 0;
@@ -668,7 +697,7 @@ int op_logic(uint8_t byte1)
 
 		set_data(data, w, res);
 		g_flags.ZF = res == 0;
-		g_flags.SF = w ? IS_NEG16(res) : IS_NEG8(res);
+		g_flags.SF = IS_NEG(res, w);
 	}
 	else
 		return 0;
@@ -681,6 +710,8 @@ int op_clc(uint8_t op)
 	{
 		pretty_print(PC + 1, 0, "clc");
 		PC += 1;
+
+		NOT_IMPLEMENTED("clc");
 	}
 	else
 		return 0;
@@ -693,6 +724,8 @@ int op_cmc(uint8_t op)
 	{
 		pretty_print(PC + 1, 0, "cmc");
 		PC += 1;
+
+		NOT_IMPLEMENTED("cmc");
 	}
 	else
 		return 0;
@@ -705,6 +738,7 @@ int op_stc(uint8_t op)
 	{
 		pretty_print(PC + 1, 0, "stc");
 		PC += 1;
+		NOT_IMPLEMENTED("stc");
 	}
 	else
 		return 0;
@@ -715,8 +749,11 @@ int op_cld(uint8_t op)
 {
 	if (op == OP_CLD)
 	{
-		pretty_print(PC + 1, 0, "cld");
+		pretty_print(PC + 1, 0, OP_DONE_MARK"cld");
 		PC += 1;
+
+		// clear DF flag
+		g_flags.DF = 0;
 	}
 	else
 		return 0;
@@ -729,6 +766,8 @@ int op_std(uint8_t op)
 	{
 		pretty_print(PC + 1, 0, "std");
 		PC += 1;
+
+		NOT_IMPLEMENTED("std");
 	}
 	else
 		return 0;
@@ -741,6 +780,8 @@ int op_cli(uint8_t op)
 	{
 		pretty_print(PC + 1, 0, "cli");
 		PC += 1;
+
+		NOT_IMPLEMENTED("cli");
 	}
 	else
 		return 0;
@@ -753,6 +794,8 @@ int op_sti(uint8_t op)
 	{
 		pretty_print(PC + 1, 0, "sti");
 		PC += 1;
+
+		NOT_IMPLEMENTED("sti");
 	}
 	else
 		return 0;
@@ -765,6 +808,8 @@ int op_hlt(uint8_t op)
 	{
 		pretty_print(PC + 1, 0, "hlt");
 		PC += 1;
+
+		NOT_IMPLEMENTED("hlt");
 	}
 	else
 		return 0;
@@ -777,6 +822,8 @@ int op_wait(uint8_t op)
 	{
 		pretty_print(PC + 1, 0, "wait");
 		PC += 1;
+
+		NOT_IMPLEMENTED("wait");
 	}
 	else
 		return 0;
@@ -803,6 +850,8 @@ int op_test_2(uint8_t byte1)
 			printf("test al, %i", (int8_t)data);
 		}
 		pretty_print(PC + 1, 1 + w, instr);
+
+		NOT_IMPLEMENTED("test_2");
 	}
 	else
 		return 0;
@@ -845,6 +894,8 @@ int op_string(uint8_t byte1)
 		char instr[32];
 		sprintf(instr, "%s%c", action, type);
 		pretty_print(PC, 0, instr);
+
+		NOT_IMPLEMENTED("string instances");
 		PC += 1;
 		return 1;
 	}
@@ -867,6 +918,8 @@ int op_rep(uint8_t byte1)
 			w ? 'w' : 'b');
 		pretty_print(PC + 1, 1, instr);
 		PC += 1;
+
+		NOT_IMPLEMENTED("rep");
 	}
 	else
 		return 0;

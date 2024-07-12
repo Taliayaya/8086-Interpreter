@@ -37,7 +37,7 @@ int op_add_1(uint8_t op, uint8_t flag,
 	if (op == OP_SW_ADD_1 && flag == OP_SW_ADD_1_FLAG)
 	{
 		PC += 2;
-		struct print_data rdata = print_mr_sw("+add", byte2, s, w, HEXA_FORMAT);
+		struct print_data rdata = print_mr_sw(OP_DONE_MARK"add", byte2, s, w, HEXA_FORMAT);
 		int16_t result;
 		int16_t immediate = w ? rdata.data_right._imm16 : rdata.data_right._imm8;
 		if (rdata.data_left.type == MOD_REG)
@@ -84,6 +84,8 @@ int op_adc_1(uint8_t op, uint8_t flag,
 	{
 		PC += 2;
 		print_mr_sw("adc", byte2, s, w, HEXA_FORMAT);
+
+		NOT_IMPLEMENTED("adc_1");
 		return 1;
 	}
 	else
@@ -97,7 +99,7 @@ int op_sub_1(uint8_t op, uint8_t flag,
 	{
 		struct print_data rdata;
 		PC += 2;
-		rdata = print_mr_sw("+sub", byte2, s, w, HEXA_FORMAT);
+		rdata = print_mr_sw(OP_DONE_MARK"sub", byte2, s, w, HEXA_FORMAT);
 		int16_t result;
 		int16_t immediate = w ? rdata.data_right._imm16 : rdata.data_right._imm8;
 		if (rdata.data_left.type == MOD_REG)
@@ -146,6 +148,8 @@ int op_ssb_1(uint8_t op, uint8_t flag,
 	{
 		PC += 2;
 		print_mr_sw("sbb", byte2, s, w, HEXA_FORMAT);
+
+		NOT_IMPLEMENTED("sbb_1");
 		return 1;
 	}
 	else
@@ -159,7 +163,7 @@ int op_cmp_1(uint8_t op, uint8_t flag,
 	{
 		PC += 2;
 		struct print_data data;
-		data = print_mr_sw("+cmp", byte2, s, w, DIGIT_FORMAT);
+		data = print_mr_sw(OP_DONE_MARK"cmp", byte2, s, w, DIGIT_FORMAT);
 
 		uint16_t ldata;
 		uint16_t rdata = data.data_right._imm16;
