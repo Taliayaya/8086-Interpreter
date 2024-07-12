@@ -122,6 +122,8 @@ get_mod(
 			mem_data.type = MOD_REG;
 			mem_data.data.reg = r_m;
 			return (struct mod_data){.byte_read=0, .memory=mem_data};
+		default:
+			err(EXIT_FAILURE, "utils.c::get_mod() - Invalid case");
 	}
 }
 
@@ -165,9 +167,9 @@ void
 set_memory(int8_t *memory, uint16_t ea, uint8_t w, int16_t data)
 {
 	if (w)
-		*(int16_t *)(g_memory + ea) = data;
+		*(int16_t *)(memory + ea) = data;
 	else
-		g_memory[ea] = data;
+		memory[ea] = data;
 
 }
 
@@ -175,27 +177,49 @@ int16_t
 get_memory(int8_t *memory, uint16_t ea, uint8_t w)
 {
 	if (w)
-		return *(int16_t *)(g_memory + ea);
+		return *(int16_t *)(memory + ea);
 	else
-		return g_memory[ea];
+		return memory[ea];
 
 }
 
 uint16_t get_data(struct operation_data data, uint8_t w)
 {
-	if (data.type == MOD_REG)
-		return get_registers(g_registers, data._reg, w);
-	else
-		return get_memory(g_memory, data._ea, w);
+	switch (data.type)
+	{
+		case MOD_REG:
+			return get_registers(g_registers, data._reg, w);
+		case MOD_EA:
+			return get_memory(g_memory, data._ea, w);
+		case MOD_IMM_16:
+			return data._imm16;
+		case MOD_IMM_8:
+			return data._imm8;
+		default:
+			err(EXIT_FAILURE, "utils.c::get_data() - Unknown data type");
+	}
 }
 
 void set_data(struct operation_data data, uint8_t w, uint16_t value)
 {
-	if (data.type == MOD_REG)
-		set_registers(g_registers, data._reg, w, value);
-	else
-		set_memory(g_memory, data._ea, w, value);
+	switch (data.type)
+	{
+		case MOD_REG:
+			set_registers(g_registers, data._reg, w, value);
+			break;
+		case MOD_EA:
+			set_memory(g_memory, data._ea, w, value);
+			break;
+		case MOD_IMM_16:
+			__attribute__((fallthrough));
+		case MOD_IMM_8:
+			err(EXIT_FAILURE, "utils.c::get_data() - Set unavailable for immediate");
 
+			break;
+		default:
+			err(EXIT_FAILURE, "utils.c::get_data() - Unknown set data type");
+			break;
+	}
 }
 
 void push_stack(uint16_t data, uint8_t w)

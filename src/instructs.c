@@ -326,7 +326,7 @@ int op_call_0(uint8_t op)
 		if (PROGRAM_MODE == DISSASSEMBLE)
 		{
 			PC += 3;
-			return;
+			return 1;
 		}
 		push_stack(PC + 3, BIT_16); // Push next instruction
 		PC += increment + 3; // go to function
@@ -538,6 +538,7 @@ int op_cbw(uint8_t op)
 	{
 		pretty_print(PC + 1, 0, OP_DONE_MARK"cbw");
 		// sign extend
+
 		g_registers[AX] = SIGN_EXTEND16(g_registers[AX]);
 		PC += 1;
 	}
@@ -588,7 +589,9 @@ int op_sub_2(uint8_t byte1)
 		uint16_t result = ldata - rdata;
 		set_registers(g_registers, AX, w, result);
 
-		g_flags.OF = OVERFLOW(ldata, rdata, result, w);
+		// ldata + (-data)
+		g_flags.OF = OVERFLOW(ldata, -rdata, result, w);
+
 		g_flags.SF = IS_NEG(result, w); // negative
 		g_flags.ZF = result == 0; // zero
 		g_flags.CF = ldata < rdata;
@@ -907,8 +910,8 @@ int op_rep(uint8_t byte1)
 {
 	if (IS_OP(byte1, W_MASK, OP_Z_REP))
 	{
-		uint8_t z, byte2, w;
-		z = W(byte1);
+		uint8_t /*z,*/ byte2, w;
+		//z = W(byte1);
 		byte2 = g_text_segment[PC + 1];
 		w = W(byte2);
 

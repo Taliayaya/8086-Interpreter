@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <err.h>
 
 #include "color.h"
 
@@ -79,8 +80,8 @@ struct	exec {			/* a.out header */
 #define BIT_16 1
 #define BIT_8  0
 
-#define IS_NEG16(x) ((x & 0x8000) == 0x8000)
-#define IS_NEG8(x)	((x & 0x80)	  == 0x80)
+#define IS_NEG16(x) (((x) & 0x8000) == 0x8000)
+#define IS_NEG8(x)	(((x) & 0x80)	== 0x80)
 #define IS_NEG(x, w) (w ? IS_NEG16(x) : IS_NEG8(x))
 
 #define POSPOS_NEG(left, right, result, w) (!IS_NEG(left, w) && !IS_NEG(right, w) &&  IS_NEG(result, w)) 
@@ -93,15 +94,15 @@ struct	exec {			/* a.out header */
 	{														\
 		if (PROGRAM_MODE == INTERPRET_DEBUG)				\
 		{													\
-			printf("\n");									\
+			fprintf(stderr, "\n");							\
 		}													\
-		printf(RED"/!\\ "BOLDRED"[ "op" ]"RESET RED			\
-		" was not implemented. "							\
+		fprintf(stderr, RED"/!\\ "BOLDRED"[ "op" ]"			\
+		RESET RED" was not implemented. "					\
 			"Unexpected behavior may occur.\n"RESET);		\
 	}														\
 })
 
-#define SIGN_EXTEND16(x) (IS_NEG8(x) ? 0xFF00 | x : x)
+#define SIGN_EXTEND16(x) (IS_NEG8(x) ? 0xFF00 | (x) : (x) & 0x00FF)
 
 #define STACK_CAPACITY 0xFFFF
 

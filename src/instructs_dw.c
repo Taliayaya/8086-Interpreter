@@ -148,42 +148,15 @@ int op_cmp_0(uint8_t op,
 		pdata = print_mrr(OP_DONE_MARK"cmp", byte2, d, w);
 		uint16_t ldata, rdata, result;
 		// MOD_REG == MOD_REG
-		if (pdata.data_left.type == pdata.data_right.type) 	
-		{
-			ldata = get_registers(g_registers, pdata.data_left._reg, w);
-			rdata = get_registers(g_registers, pdata.data_right._reg, w);
-		}
-		else // MOD_EA
-		{
-			if (d == 0) // mem, reg
-			{
-				rdata = get_registers(g_registers, 
-					pdata.data_right._reg, w);
-				ldata = get_memory(g_memory, 
-					pdata.data_left._ea, w);
-			}
-			else // reg, mem
-			{
-				ldata = get_registers(g_registers, 
-					pdata.data_left._reg, w);
-				rdata = get_memory(g_memory, 
-					pdata.data_right._ea, w);
-			}
-		}
+		ldata = get_data(pdata.data_left, w);
+		rdata = get_data(pdata.data_right, w);
+
 		result = ldata - rdata;
 		g_flags.CF = (uint16_t)ldata < (uint16_t)rdata;
 		g_flags.SF = w ? (result & 0x8000) == 0x8000 : (result & 0x80) == 0x80;
 		g_flags.ZF = result == 0;
-		if (w)
-			g_flags.OF = 
-				((ldata & 0x8000) != 0x8000 && (rdata & 0x8000) == 0x8000 && g_flags.SF) ||
-				(ldata & 0x8000) == 0x8000 && (rdata & 0x8000) != 0x8000 && !g_flags.SF;
-		else
-			g_flags.OF = 
-				((ldata & 0x80) != 0x80 && (rdata & 0x80) == 0x80 && g_flags.SF) ||
-				(ldata & 0x80) == 0x80 && (rdata & 0x80) != 0x80 && !g_flags.SF;
-
-
+		// we've to make -rdata because its ldata + (-rdata) (ldata - rdata)
+		g_flags.OF = OVERFLOW(ldata, -rdata, result, w);
 
 		return 1;
 	}

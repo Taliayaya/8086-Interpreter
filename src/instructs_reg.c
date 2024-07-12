@@ -75,7 +75,7 @@ int op_xchg_1(uint8_t op, uint8_t reg)
 	if (op == OP_XCHG_1)
 	{
 		char instr[32];
-		sprintf(instr, OP_DONE_MARK"xchg %s, ax\n", get_reg(reg, DEFAULT_W));
+		sprintf(instr, OP_DONE_MARK"xchg %s, ax", get_reg(reg, DEFAULT_W));
 		pretty_print(PC + 1, 0, instr);
 
 		uint16_t ldata, rdata;

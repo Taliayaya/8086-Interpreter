@@ -26,7 +26,7 @@ print_mr(char *op_name, uint8_t byte2,
 
 struct print_data
 print_mr_sw(char *op_name, uint8_t byte2,
-	uint8_t s, uint8_t w, uint8_t digit);
+	uint8_t s, uint8_t w);
 
 struct print_data
 print_mrr(char *op_name, uint8_t byte2, 

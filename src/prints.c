@@ -2,16 +2,16 @@
 
 void print_registers_header(void)
 {
-	printf(" AX   BX   CX   DX   SP   BP   SI   DI  FLAGS IP\n");
+	fprintf(stderr, " AX   BX   CX   DX   SP   BP   SI   DI  FLAGS IP\n");
 }
 
 void print_registers_state(void)
 {
-	printf("%04hx %04hx %04hx %04hx %04hx %04hx %04hx %04hx ",
+	fprintf(stderr, "%04hx %04hx %04hx %04hx %04hx %04hx %04hx %04hx ",
 		g_registers[AX], g_registers[BX], g_registers[CX],
 		g_registers[DX], g_registers[SP], g_registers[BP],
 		g_registers[SI], g_registers[DI]);
-	printf("%c%c%c%c ",
+	fprintf(stderr, "%c%c%c%c ",
 		g_flags.OF ? 'O' : '-',
 		g_flags.SF ? 'S' : '-',
 		g_flags.ZF ? 'Z' : '-',
@@ -24,18 +24,18 @@ void print_memory_content(struct operation_data data, uint8_t w)
 	if (PROGRAM_MODE != INTERPRET_DEBUG)
 		return;
 
-	printf(" ;[%04hx]", data._ea);
+	fprintf(stderr, " ;[%04hx]", data._ea);
 	if (w)
 	{
 		int16_t mem_data = get_memory(g_memory, 
 			data._ea, BIT_16);
-		printf("%04hx", mem_data);
+		fprintf(stderr, "%04hx", mem_data);
 	}
 	else
 	{
 		int16_t mem_data = get_memory(g_memory, 
 			data._ea, BIT_8);
-		printf("%02hhx", mem_data);
+		fprintf(stderr, "%02hhx", mem_data);
 	}
 }
 
@@ -54,7 +54,7 @@ void pretty_print(uint16_t byte_start, size_t count, char *instr)
 
         strcat(concatenated, temp);
     }
-    printf("%-14s%s", concatenated, instr);
+    fprintf(stderr, "%-14s%s", concatenated, instr);
 }
 
 struct print_data
@@ -156,7 +156,7 @@ print_mr_vw(char *op_name, uint8_t byte2,
 
 struct print_data
 print_mr_sw(char *op_name, uint8_t byte2,
-	uint8_t s, uint8_t w, uint8_t digit)
+	uint8_t s, uint8_t w)
 {
 	uint8_t mod, r_m;
 	mod = MOD(byte2);
