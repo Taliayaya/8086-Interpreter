@@ -54,7 +54,7 @@ void pretty_print(uint16_t byte_start, size_t count, char *instr)
 
         strcat(concatenated, temp);
     }
-    fprintf(stderr, "%-14s%s", concatenated, instr);
+    fprintf(stderr, "%-11s%s", concatenated, instr);
 }
 
 struct print_data
@@ -257,7 +257,7 @@ print_mr_data(char *op_name, uint8_t byte2,
 		rdata.data_right = (struct operation_data)
 			{.type=MOD_IMM_8, ._imm8=data};
 
-		sprintf(instr, "%s %s %s, %2hhx", op_name, is_byte ? "byte" : "", dest, data);
+		sprintf(instr, "%s %s %s, %hhx", op_name, is_byte ? "byte" : "", dest, data);
 	}
 
 	pretty_print(PC - byte_read, byte_read, instr);

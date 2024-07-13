@@ -41,7 +41,7 @@ struct	exec {			/* a.out header */
 
 #define EA_STRING_SIZE 16
 
-#define OP_DONE_MARK "+"
+#define OP_DONE_MARK ""
 
 // RIGHT BYTE
 #define MOD(x) ((x & 0b11000000) >>  6)

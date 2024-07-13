@@ -115,7 +115,10 @@ int main(int argc, char **argv)
 		instruct();
 	}
 	if (PROGRAM_MODE == DISSASSEMBLE)
-		printf("%04hx: 00		(undefined)\n", PC);
+	{
+		fprintf(stderr, "%04hx: 00", PC);
+		pretty_print(0, 0, "(undefined)\n");
+	}
 	return 0;	
 }
 

@@ -850,7 +850,7 @@ int op_test_2(uint8_t byte1)
 		{
 			data = g_text_segment[PC + 1];
 			PC += 2;
-			printf("test al, %i", (int8_t)data);
+			sprintf(instr, "test al, %i", (int8_t)data);
 		}
 		pretty_print(PC + 1, 1 + w, instr);
 
@@ -920,7 +920,7 @@ int op_rep(uint8_t byte1)
 		sprintf(instr, "rep %s%c", sub_inst,
 			w ? 'w' : 'b');
 		pretty_print(PC + 1, 1, instr);
-		PC += 1;
+		PC += 2;
 
 		NOT_IMPLEMENTED("rep");
 	}

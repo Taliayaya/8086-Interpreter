@@ -49,7 +49,10 @@ void sys_write_4(int8_t *memory, uint16_t registers[8], message *m)
 			fd, buffer, nbytes);
 
 	for (int i = 0; i < nbytes; ++i)
-		printf("%c", g_memory[buffer + i]);
+		fprintf(stdout, "%c", g_memory[buffer + i]);
+	// necessary because when redirecting into files,
+	// it is otherwise written at the end of it
+	fflush(stdout);
 
 	if (PROGRAM_MODE == INTERPRET_DEBUG)
 		fprintf(stderr, " => %i>", nbytes);
