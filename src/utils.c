@@ -1,7 +1,7 @@
 #include "utils.h"
 
 uint16_t g_registers[8] = {0, 0, 0, 0,
-						  0xffda, 0, 0, 0};
+						  0xffff, 0, 0, 0};
 int8_t *g_memory;
 int8_t *g_stack;
 struct flags g_flags = {0,};
