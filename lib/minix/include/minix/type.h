@@ -14,8 +14,8 @@ typedef void (*sighandler_t)(int16_t);
 
 /* MINIX 2 IS A 32-BYTE OPERATING SYSTEM
  * Hence, we have two adjust. 
- * - int => int16_t
- * - int * => uint16_t | /!\ pointers are 8 bytes here, but should be 4 in minix 
+ * - int, short => int16_t
+ * - int *, long => uint32_t | /!\ pointers are 8 bytes here, but should be 4 in minix  (same for long)
  */
 
 typedef struct {

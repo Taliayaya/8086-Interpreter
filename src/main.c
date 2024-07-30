@@ -118,12 +118,12 @@ int main(int argc, char **argv)
 	if (argc < 2)
 		return 1;
 	char *path;
-	if (argc == 2)
+	if (argv[1][0] != '-')
 	{
 		PROGRAM_MODE = INTERPRET;
 		path = argv[1];
 	}
-	else if (argc == 3)
+	else
 	{
 		path = argv[2];
 		if (strcmp(argv[1], "-m") == 0)
