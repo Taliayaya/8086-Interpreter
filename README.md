@@ -25,6 +25,27 @@ Execute the binary program.
 - `-m`  Execute and display the program command and registers/flags states
 - `-d`  Display the binary as a dissambled program. 
 
+## STRUCTURE
+```
+├── bin
+├── build
+├── docs
+├── include
+├── lib
+│   └── minix
+│       └── include
+│           └── minix
+├── src
+├── tests
+    ├── tests_bin
+    │   └── asm
+    ├── tests_ref
+    │   ├── disassemble
+    │   └── interpret_debug
+    ├── tests_source
+    └── tests_tmp
+``
+
 ## EXAMPLE
 
 ```
