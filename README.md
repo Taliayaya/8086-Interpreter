@@ -27,24 +27,23 @@ Execute the binary program.
 
 ## STRUCTURE
 ```
-├── bin
+├── bin                                   // binary output
 ├── build
-├── docs
+├── docs                                  // intel specifications
 ├── include
-├── lib
+├── lib                            
 │   └── minix
-│       └── include
+│       └── include                       // headers modified to simulate minix2 environment
 │           └── minix
 ├── src
-├── tests
-    ├── tests_bin
+└── tests
+    ├── tests_bin                         // precompiled 16-bit 8086 ASM binary
     │   └── asm
     ├── tests_ref
     │   ├── disassemble
     │   └── interpret_debug
-    ├── tests_source
-    └── tests_tmp
-``
+    └──  tests_source
+```
 
 ## EXAMPLE
 
